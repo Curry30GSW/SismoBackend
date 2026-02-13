@@ -5,6 +5,19 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 
 const app = express();
+
+// =============================================
+// IMPORTS DE RUTAS - NUEVA ESTRUCTURA
+// =============================================
+const anioLegalRoutes = require('./routes/anioLegalRoutes');
+const cargoBaseRoutes = require('./routes/cargoBaseRoutes');
+const funcionarioRoutes = require('./routes/funcionarioRoutes');
+const categoriaDirectorRoutes = require('./routes/categoriaDirectorRoutes');
+const posicionCargoRoutes = require('./routes/posicionCargoRoutes');
+const movimientoCargoRoutes = require('./routes/movimientoCargoRoutes');
+const historicoSalarioRoutes = require('./routes/historicoSalarioRoutes');
+
+
 const cargoRoutes = require('./routes/CargoRoutes')
 const directoresCategoriasRoutes = require('./routes/DirectoresRoutes')
 const departamentoRoutes = require('./routes/DepartamentosRoutes')
@@ -32,10 +45,25 @@ app.use(cors({
 
 app.use(express.json());
 
+
+// =============================================
+// RUTAS - NUEVA ESTRUCTURA
+// =============================================
+// Todas las rutas nuevas van con /api
+app.use('/api/anios', anioLegalRoutes);              // -> /api/anios-legales
+app.use('/api/cargos-base', cargoBaseRoutes);              // -> /api/cargos-base
+app.use('/api/funcionarios', funcionarioRoutes);            // -> /api/funcionarios
+app.use('/api/categorias-director', categoriaDirectorRoutes);      // -> /api/categorias-director
+app.use('/api/posiciones-cargo', posicionCargoRoutes);          // -> /api/posiciones-cargo
+app.use('/api/movimientos-cargo', movimientoCargoRoutes);        // -> /api/movimientos-cargo
+app.use('/api/historico-salario', historicoSalarioRoutes);       // -> /api/historicos-salario
+
+
+
 //RUTAS
 app.use('/api', cargoRoutes)
 app.use('/api', directoresCategoriasRoutes)
-app.use('/api', departamentoRoutes)
+app.use('/api/dptos', departamentoRoutes)
 
 
 

@@ -1,4 +1,4 @@
-const CategoriaDirectorModel = require('../models/DirectoresModel');
+const CategoriaDirectorModel = require('../models/CategoriaDirectorModel');
 
 const CategoriaDirectorController = {
 
@@ -12,6 +12,29 @@ const CategoriaDirectorController = {
                 return res.status(400).json({
                     success: false,
                     message: 'Todos los campos son requeridos'
+                });
+            }
+
+            // Validar que la categoría sea una letra
+            if (!/^[A-Z]$/.test(categoria)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La categoría debe ser una letra mayúscula de la A a la Z'
+                });
+            }
+
+            // VERIFICAR SI LA CATEGORÍA YA EXISTE POR SU LETRA
+            const categoriaExistente = await CategoriaDirectorModel.findByCategoria(categoria);
+            if (categoriaExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: `La categoría ${categoria} ya existe en el sistema`,
+                    data: {
+                        id_categoria: categoriaExistente.id_categoria,
+                        categoria: categoriaExistente.categoria,
+                        rango_min: categoriaExistente.rango_min,
+                        rango_max: categoriaExistente.rango_max
+                    }
                 });
             }
 
@@ -37,7 +60,8 @@ const CategoriaDirectorController = {
                 success: true,
                 message: 'Categoría creada exitosamente',
                 data: {
-                    id_categoria: result.insertId
+                    id_categoria: result.insertId,
+                    categoria: categoria
                 }
             });
 
@@ -162,46 +186,69 @@ const CategoriaDirectorController = {
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { categoria, rango_min, rango_max } = req.body;
+            const { categoria, rango_min, rango_max, salario_basico, bonificacion } = req.body;
 
-            // Verificar si existe
-            const categoriaExistente = await CategoriaDirectorModel.findById(id);
-            if (!categoriaExistente) {
+            // Validaciones
+            if (!categoria || !rango_min || !rango_max || !salario_basico || !bonificacion) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Todos los campos son requeridos'
+                });
+            }
+
+            // Validar que la categoría sea una letra
+            if (!/^[A-Z]$/.test(categoria)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La categoría debe ser una letra mayúscula de la A a la Z'
+                });
+            }
+
+            // VERIFICAR SI LA CATEGORÍA YA EXISTE (EXCLUYENDO LA ACTUAL)
+            const categoriaExistente = await CategoriaDirectorModel.findByCategoria(categoria);
+            if (categoriaExistente && categoriaExistente.id_categoria != id) {
+                return res.status(400).json({
+                    success: false,
+                    message: `La categoría ${categoria} ya existe en el sistema`,
+                    data: {
+                        id_categoria: categoriaExistente.id_categoria,
+                        categoria: categoriaExistente.categoria
+                    }
+                });
+            }
+
+            if (parseInt(rango_min) >= parseInt(rango_max)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El rango mínimo debe ser menor al rango máximo'
+                });
+            }
+
+            // Verificar si el rango se solapa con otros (excluyendo el actual)
+            const tieneSolapamiento = await CategoriaDirectorModel.checkRangoOverlap(rango_min, rango_max, id);
+            if (tieneSolapamiento) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El rango se solapa con otra categoría existente'
+                });
+            }
+
+            const result = await CategoriaDirectorModel.update(id, req.body);
+
+            if (result.affectedRows === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'Categoría no encontrada'
                 });
             }
 
-            // Validar rangos si se están actualizando
-            if (rango_min !== undefined && rango_max !== undefined) {
-                if (parseInt(rango_min) >= parseInt(rango_max)) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'El rango mínimo debe ser menor al rango máximo'
-                    });
-                }
-
-                // Verificar solapamiento excluyendo la categoría actual
-                const tieneSolapamiento = await CategoriaDirectorModel.checkRangoOverlap(
-                    rango_min,
-                    rango_max,
-                    id
-                );
-                if (tieneSolapamiento) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'El rango se solapa con otra categoría existente'
-                    });
-                }
-            }
-
-            const result = await CategoriaDirectorModel.update(id, req.body);
-
-            res.json({
+            res.status(200).json({
                 success: true,
                 message: 'Categoría actualizada exitosamente',
-                data: result
+                data: {
+                    id_categoria: parseInt(id),
+                    categoria: categoria
+                }
             });
 
         } catch (error) {
