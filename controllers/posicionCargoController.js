@@ -381,16 +381,17 @@ const posicionCargoController = {
                 });
             }
 
-            const cantidad = await PosicionCargoModel.copyFromYear(
+            const resultado = await PosicionCargoModel.copyFromYear(
                 id_anio_origen,
                 id_anio_destino,
                 new Date()
             );
 
             res.json({
-                message: 'Posiciones copiadas exitosamente',
+                message: 'Posiciones y funcionarios copiados exitosamente',
                 data: {
-                    posiciones_copiadas: cantidad,
+                    posiciones_copiadas: resultado.posiciones,
+                    funcionarios_copiados: resultado.funcionarios,
                     año_origen: anioOrigen.anio,
                     año_destino: anioDestino.anio
                 }

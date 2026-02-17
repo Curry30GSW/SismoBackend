@@ -8,7 +8,6 @@ const cargoBaseController = {
             const {
                 codigo_cargo,
                 nombre_cargo,
-                nivel_cargo,
                 requiere_bonificacion,
                 es_director_agencia,
                 id_categoria_director,
@@ -16,9 +15,9 @@ const cargoBaseController = {
             } = req.body;
 
             // Validaciones obligatorias
-            if (!codigo_cargo || !nombre_cargo || !nivel_cargo) {
+            if (!codigo_cargo || !nombre_cargo) {
                 return res.status(400).json({
-                    message: 'Código, nombre y nivel del cargo son requeridos'
+                    message: 'Código y nombre son requeridos'
                 });
             }
 
@@ -50,7 +49,6 @@ const cargoBaseController = {
             const result = await CargoBaseModel.create({
                 codigo_cargo,
                 nombre_cargo,
-                nivel_cargo,
                 requiere_bonificacion: requiere_bonificacion || false,
                 es_director_agencia: es_director_agencia || false,
                 id_categoria_director: id_categoria_director || null,
@@ -70,11 +68,10 @@ const cargoBaseController = {
     // 2. OBTENER TODOS LOS CARGOS BASE
     getAll: async (req, res) => {
         try {
-            const { activo, nivel_cargo, es_director_agencia } = req.query;
+            const { activo, es_director_agencia } = req.query;
 
             const filtros = {
                 activo: activo !== undefined ? activo === 'true' : undefined,
-                nivel_cargo: nivel_cargo || undefined,
                 es_director_agencia: es_director_agencia !== undefined ? es_director_agencia === 'true' : undefined
             };
 
@@ -137,7 +134,6 @@ const cargoBaseController = {
             const {
                 codigo_cargo,
                 nombre_cargo,
-                nivel_cargo,
                 requiere_bonificacion,
                 es_director_agencia,
                 id_categoria_director,
@@ -182,7 +178,6 @@ const cargoBaseController = {
             await CargoBaseModel.update(id, {
                 codigo_cargo: codigo_cargo || cargoExistente.codigo_cargo,
                 nombre_cargo: nombre_cargo || cargoExistente.nombre_cargo,
-                nivel_cargo: nivel_cargo || cargoExistente.nivel_cargo,
                 requiere_bonificacion: requiere_bonificacion !== undefined ? requiere_bonificacion : cargoExistente.requiere_bonificacion,
                 es_director_agencia: es_director_agencia !== undefined ? es_director_agencia : cargoExistente.es_director_agencia,
                 id_categoria_director: id_categoria_director !== undefined ? id_categoria_director : cargoExistente.id_categoria_director,
@@ -281,7 +276,6 @@ const cargoBaseController = {
             }
 
             const data = await CargoBaseModel.getAll({
-                nivel_cargo: nivel,
                 activo: true
             });
 

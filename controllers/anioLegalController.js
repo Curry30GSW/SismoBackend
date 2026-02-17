@@ -37,6 +37,11 @@ const anioLegalController = {
             // Crear el año legal
             const result = await AnioLegalModel.create(data);
 
+            // 🔥 Si se creó con activo = true, desactivar los demás años
+            if (data.activo === true) {
+                await AnioLegalModel.setActivo(result.id, true);
+            }
+
             res.status(201).json({
                 success: true,
                 message: 'Año legal creado exitosamente',

@@ -13,8 +13,8 @@ const DepartamentoModel = {
             `;
 
             const values = [
-                data.codigo_ext,
-                data.nombre_departamento,
+                data.ext,
+                data.departamento,
                 data.activo !== undefined ? data.activo : true
             ];
 
@@ -26,13 +26,12 @@ const DepartamentoModel = {
         }
     },
 
-    findAll: async (activo = true) => {
+    findAll: async () => {
         const [rows] = await pool.query(`
             SELECT id_departamento, codigo_ext, nombre_departamento, activo
             FROM departamentos
-            WHERE activo = ?
             ORDER BY nombre_departamento ASC
-        `, [activo]);
+        `,);
         return rows;
     },
 

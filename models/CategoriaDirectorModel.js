@@ -105,7 +105,7 @@ const CategoriaDirectorModel = {
     checkRangoOverlap: async (rangoMin, rangoMax, excludeId = null) => {
         let query = `
             SELECT * FROM categorias_director 
-            WHERE activo = true AND (
+            WHERE (
                 (? BETWEEN rango_min_clientes AND rango_max_clientes) OR
                 (? BETWEEN rango_min_clientes AND rango_max_clientes) OR
                 (rango_min_clientes BETWEEN ? AND ?) OR

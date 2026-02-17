@@ -203,22 +203,39 @@ const PosicionCargoModel = {
         try {
             await connection.beginTransaction();
 
+            // 🔥 Obtener posiciones CON sus funcionarios
             const [rows] = await connection.query(`
-                SELECT pc.* 
-                FROM posiciones_cargo pc
-                WHERE pc.id_anio_legal = ? AND pc.activo = true
-            `, [idAnioOrigen]);
+            SELECT 
+                pc.*,
+                f.id_funcionario as funcionario_id,
+                f.tipo_documento,
+                f.numero_documento,
+                f.nombres,
+                f.apellidos,
+                f.fecha_nacimiento,
+                f.correo_electronico,
+                f.telefono,
+                f.fecha_ingreso
+            FROM posiciones_cargo pc
+            LEFT JOIN funcionarios f ON pc.id_posicion = f.id_posicion AND f.activo = true
+            WHERE pc.id_anio_legal = ? AND pc.activo = true
+        `, [idAnioOrigen]);
+
+            let posicionesCopiadas = 0;
+            let funcionariosCopiados = 0;
 
             for (const posicion of rows) {
+                // Generar nuevo código de posición con el año destino
                 const nuevoCodigo = posicion.codigo_posicion.replace(/\d{4}$/, fechaCreacion.getFullYear().toString());
 
-                await connection.query(`
-                    INSERT INTO posiciones_cargo (
-                        id_cargo_base, id_anio_legal, codigo_posicion, id_departamento,
-                        sede_ubicacion, salario_base, aplica_auxilio_transporte, 
-                        bonificacion, fecha_creacion_posicion, activo, observaciones
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `, [
+                // 1. Insertar la nueva posición
+                const [posicionResult] = await connection.query(`
+                INSERT INTO posiciones_cargo (
+                    id_cargo_base, id_anio_legal, codigo_posicion, id_departamento,
+                    sede_ubicacion, salario_base, aplica_auxilio_transporte, 
+                    bonificacion, fecha_creacion_posicion, activo, observaciones
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
                     posicion.id_cargo_base,
                     idAnioDestino,
                     nuevoCodigo,
@@ -231,10 +248,46 @@ const PosicionCargoModel = {
                     true,
                     `Copiado desde año ${posicion.id_anio_legal}`
                 ]);
+
+                posicionesCopiadas++;
+
+                // 2. Si la posición tenía un funcionario, copiarlo a la nueva posición
+                if (posicion.funcionario_id) {
+                    await connection.query(`
+                    INSERT INTO funcionarios (
+                        id_posicion,
+                        tipo_documento,
+                        numero_documento,
+                        nombres,
+                        apellidos,
+                        fecha_nacimiento,
+                        correo_electronico,
+                        telefono,
+                        fecha_ingreso,
+                        activo
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                        posicionResult.insertId, // ID de la nueva posición
+                        posicion.tipo_documento,
+                        posicion.numero_documento,
+                        posicion.nombres,
+                        posicion.apellidos,
+                        posicion.fecha_nacimiento,
+                        posicion.correo_electronico,
+                        posicion.telefono,
+                        fechaCreacion, // Nueva fecha de ingreso para el nuevo año
+                        true
+                    ]);
+
+                    funcionariosCopiados++;
+                }
             }
 
             await connection.commit();
-            return rows.length;
+            return {
+                posiciones: posicionesCopiadas,
+                funcionarios: funcionariosCopiados
+            };
 
         } catch (error) {
             await connection.rollback();
@@ -242,7 +295,7 @@ const PosicionCargoModel = {
         } finally {
             connection.release();
         }
-    }
+    },
 };
 
 module.exports = PosicionCargoModel;

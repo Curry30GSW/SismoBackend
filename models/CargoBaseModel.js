@@ -9,18 +9,16 @@ const CargoBaseModel = {
                 INSERT INTO cargos_base (
                     codigo_cargo,
                     nombre_cargo,
-                    nivel_cargo,
                     requiere_bonificacion,
                     es_director_agencia,
                     id_categoria_director,
                     activo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?)
             `;
 
             const values = [
                 data.codigo_cargo,
                 data.nombre_cargo,
-                data.nivel_cargo,
                 data.requiere_bonificacion || false,
                 data.es_director_agencia || false,
                 data.id_categoria_director || null,
@@ -43,11 +41,6 @@ const CargoBaseModel = {
         if (filtros.activo !== undefined) {
             query += ' AND activo = ?';
             params.push(filtros.activo);
-        }
-
-        if (filtros.nivel_cargo) {
-            query += ' AND nivel_cargo = ?';
-            params.push(filtros.nivel_cargo);
         }
 
         if (filtros.es_director_agencia !== undefined) {
@@ -85,7 +78,6 @@ const CargoBaseModel = {
             UPDATE cargos_base SET
                 codigo_cargo = ?,
                 nombre_cargo = ?,
-                nivel_cargo = ?,
                 requiere_bonificacion = ?,
                 es_director_agencia = ?,
                 id_categoria_director = ?,
@@ -96,7 +88,6 @@ const CargoBaseModel = {
         const values = [
             data.codigo_cargo,
             data.nombre_cargo,
-            data.nivel_cargo,
             data.requiere_bonificacion,
             data.es_director_agencia,
             data.id_categoria_director,

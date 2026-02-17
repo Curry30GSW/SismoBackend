@@ -63,17 +63,17 @@ const DepartamentoController = {
 
     update: async (req, res) => {
         try {
-            const { ext, departamento } = req.body;
+            const { codigo_ext, nombre_departamento, activo } = req.body;
             const id = req.params.id;
 
-            if (!ext || !departamento) {
+            if (!codigo_ext || !nombre_departamento) {
                 return res.status(400).json({
                     success: false,
-                    message: 'EXT y Departamento son obligatorios'
+                    message: 'Ext y Departamento son obligatorios'
                 });
             }
 
-            const result = await DepartamentoModel.update(id, { ext, departamento });
+            const result = await DepartamentoModel.update(id, { codigo_ext, nombre_departamento, activo: activo !== undefined ? activo : true });
 
             if (result.affectedRows === 0) {
                 return res.status(404).json({
