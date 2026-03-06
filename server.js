@@ -16,6 +16,8 @@ const categoriaDirectorRoutes = require('./routes/categoriaDirectorRoutes');
 const posicionCargoRoutes = require('./routes/posicionCargoRoutes');
 const movimientoCargoRoutes = require('./routes/movimientoCargoRoutes');
 const historicoSalarioRoutes = require('./routes/historicoSalarioRoutes');
+const comparativoRoutes = require('./routes/comparativoRoutes');
+const configuracionPrestacionesRoutes = require('./routes/configuracionPrestacionesRoutes');
 
 
 const cargoRoutes = require('./routes/CargoRoutes')
@@ -57,7 +59,8 @@ app.use('/api/categorias-director', categoriaDirectorRoutes);      // -> /api/ca
 app.use('/api/posiciones-cargo', posicionCargoRoutes);          // -> /api/posiciones-cargo
 app.use('/api/movimientos-cargo', movimientoCargoRoutes);        // -> /api/movimientos-cargo
 app.use('/api/historico-salario', historicoSalarioRoutes);       // -> /api/historicos-salario
-
+app.use('/api/comparativo', comparativoRoutes);
+app.use('/api/prestaciones', configuracionPrestacionesRoutes); // -> /api/configuracion-prestaciones
 
 
 //RUTAS

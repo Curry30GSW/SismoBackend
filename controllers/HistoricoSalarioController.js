@@ -463,6 +463,106 @@ const historicoSalarioController = {
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
+    },
+
+    // 11. Configurar salarios por lote (múltiples cargos)
+    configurarLote: async (req, res) => {
+        try {
+            const { ids_cargos, id_anio_legal, salario_base, bonificacion, aplica_auxilio_transporte, fecha_desde } = req.body;
+
+            // Validaciones
+            if (!ids_cargos || !Array.isArray(ids_cargos) || ids_cargos.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Debe seleccionar al menos un cargo'
+                });
+            }
+
+            if (!id_anio_legal) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El año legal es requerido'
+                });
+            }
+
+            if (!salario_base || salario_base <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El salario base debe ser mayor a 0'
+                });
+            }
+
+            // Verificar que el año existe
+            const anioLegal = await AnioLegalModel.getById(id_anio_legal);
+            if (!anioLegal) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Año legal no encontrado'
+                });
+            }
+
+            // Procesar cada cargo
+            const resultados = [];
+            const errores = [];
+
+            for (const id_cargo_base of ids_cargos) {
+                try {
+                    // Verificar que el cargo existe
+                    const cargo = await CargoBaseModel.getById(id_cargo_base);
+                    if (!cargo) {
+                        errores.push({ id_cargo: id_cargo_base, error: 'Cargo no encontrado' });
+                        continue;
+                    }
+
+                    // Verificar si requiere bonificación
+                    const bonificacionFinal = cargo.requiere_bonificacion ? (bonificacion || 0) : 0;
+
+                    // Guardar/actualizar salario
+                    await HistoricoSalarioModel.upsert({
+                        id_cargo_base,
+                        id_anio_legal,
+                        salario_base,
+                        bonificacion: bonificacionFinal,
+                        aplica_auxilio_transporte,
+                        fecha_desde: fecha_desde || new Date(),
+                        activo: true
+                    });
+
+                    resultados.push({
+                        id_cargo: id_cargo_base,
+                        codigo: cargo.codigo_cargo,
+                        nombre: cargo.nombre_cargo,
+                        success: true
+                    });
+
+                } catch (error) {
+                    errores.push({
+                        id_cargo: id_cargo_base,
+                        error: error.message
+                    });
+                }
+            }
+
+            res.json({
+                success: true,
+                message: `Procesados ${resultados.length} cargos${errores.length > 0 ? `, ${errores.length} errores` : ''}`,
+                data: {
+                    procesados: resultados.length,
+                    errores: errores.length,
+                    detalles: {
+                        exitosos: resultados,
+                        fallidos: errores
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error en configurarLote:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Error al configurar salarios por lote'
+            });
+        }
     }
 };
 

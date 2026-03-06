@@ -9,14 +9,16 @@ const AnioLegalModel = {
                 INSERT INTO anios_legales (
                     anio,
                     salario_minimo_legal,
+                    salario_minimo_coopserp,
                     auxilio_transporte,
                     activo
-                ) VALUES (?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?)
             `;
 
             const values = [
                 data.anio,
                 data.salario_minimo_legal,
+                data.salario_minimo_coopserp,
                 data.auxilio_transporte,
                 data.activo !== undefined ? data.activo : true
             ];
@@ -77,6 +79,7 @@ const AnioLegalModel = {
             UPDATE anios_legales SET
                 anio = ?,
                 salario_minimo_legal = ?,
+                salario_minimo_coopserp = ?,
                 auxilio_transporte = ?,
                 activo = ?
             WHERE id_anio_legal = ?
@@ -85,6 +88,7 @@ const AnioLegalModel = {
         const values = [
             data.anio,
             data.salario_minimo_legal,
+            data.salario_minimo_coopserp,
             data.auxilio_transporte,
             data.activo,
             id

@@ -11,6 +11,15 @@ const DepartamentoController = {
         }
     },
 
+    getActivos: async (req, res) => {
+        try {
+            const departamentos = await DepartamentoModel.findActivos();
+            res.json({ success: true, data: departamentos });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
     getById: async (req, res) => {
         try {
             const departamento = await DepartamentoModel.findById(req.params.id);

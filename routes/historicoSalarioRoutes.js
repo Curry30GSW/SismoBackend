@@ -15,6 +15,7 @@ router.get('/cargo/:id_cargo_base/anio/:id_anio_legal', historicoSalarioControll
 
 // Rutas de operaciones
 router.post('/', historicoSalarioController.upsert);
+router.post('/lote', historicoSalarioController.configurarLote);
 router.put('/:id', historicoSalarioController.update);
 router.patch('/:id/activo', historicoSalarioController.setActivo);
 router.delete('/:id', historicoSalarioController.deactivate);

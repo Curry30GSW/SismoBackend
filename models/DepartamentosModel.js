@@ -35,6 +35,16 @@ const DepartamentoModel = {
         return rows;
     },
 
+    findActivos: async () => {
+        const [rows] = await pool.query(`
+            SELECT id_departamento, codigo_ext, nombre_departamento, activo
+            FROM departamentos
+            WHERE activo = 1
+            ORDER BY nombre_departamento ASC
+        `,);
+        return rows;
+    },
+
     findById: async (id) => {
         const [rows] = await pool.query(
             'SELECT * FROM departamentos WHERE id_departamento = ?',

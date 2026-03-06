@@ -5,9 +5,8 @@ const posicionCargoController = require('../controllers/posicionCargoController'
 // =============================================
 // RUTAS PRINCIPALES PARA TU COMPONENTE
 // =============================================
-
-// ¡ESTA ES LA RUTA QUE USA TU COMPONENTE!
-// GET /api/posiciones-cargo/disponibilidad/1
+router.post('/:id/trasladar-cargo', posicionCargoController.trasladarCargo);
+router.post('/:id/trasladar-funcionario', posicionCargoController.trasladarFuncionario);
 router.get('/disponibilidad/:id_anio_legal', posicionCargoController.getDisponibilidad);
 
 // =============================================
@@ -18,10 +17,8 @@ router.get('/:id', posicionCargoController.getById);
 router.put('/:id', posicionCargoController.update);
 router.delete('/:id', posicionCargoController.delete);
 
-// =============================================
-// RUTAS POR AÑO (CON FILTROS)
-// =============================================
-// GET /api/posiciones-cargo/anio/1?estado=disponible&id_cargo_base=2
+router.post('/:id/desasignar', posicionCargoController.desasignarFuncionario);
+
 router.get('/anio/:id_anio_legal', posicionCargoController.getAllByAnio);
 
 // =============================================
@@ -39,5 +36,9 @@ router.get('/anio/:id_anio_legal/estado/:estado', posicionCargoController.getByE
 
 // Copiar posiciones de un año a otro
 router.post('/copy/:id_anio_origen/:id_anio_destino', posicionCargoController.copyFromYear);
+
+
+router.post('/:id/asignar-funcionario', posicionCargoController.asignarFuncionario);
+
 
 module.exports = router;
