@@ -12,8 +12,9 @@ const CargoBaseModel = {
                     requiere_bonificacion,
                     es_director_agencia,
                     id_categoria_director,
+                    id_tipo_planta,
                     activo
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
 
             const values = [
@@ -22,6 +23,7 @@ const CargoBaseModel = {
                 data.requiere_bonificacion || false,
                 data.es_director_agencia || false,
                 data.id_categoria_director || null,
+                data.id_tipo_planta || null,
                 data.activo !== undefined ? data.activo : true
             ];
 
@@ -33,33 +35,58 @@ const CargoBaseModel = {
         }
     },
 
+
     // Obtener todos los cargos base
     getAll: async (filtros = {}) => {
-        let query = 'SELECT * FROM cargos_base WHERE 1=1';
+        let query = `
+            SELECT 
+                cb.*,
+                tp.id_tipo_planta as tipo_planta_id,
+                tp.codigo_tipo,
+                tp.nombre_tipo,
+                tp.color_representacion
+            FROM cargos_base cb
+            LEFT JOIN tipos_planta tp ON cb.id_tipo_planta = tp.id_tipo_planta
+            WHERE 1=1
+        `;
         let params = [];
 
         if (filtros.activo !== undefined) {
-            query += ' AND activo = ?';
+            query += ' AND cb.activo = ?';
             params.push(filtros.activo);
         }
 
         if (filtros.es_director_agencia !== undefined) {
-            query += ' AND es_director_agencia = ?';
+            query += ' AND cb.es_director_agencia = ?';
             params.push(filtros.es_director_agencia);
         }
 
-        query += ' ORDER BY nombre_cargo ASC';
+        // 🔥 NUEVO FILTRO POR TIPO DE PLANTA
+        if (filtros.id_tipo_planta) {
+            query += ' AND cb.id_tipo_planta = ?';
+            params.push(filtros.id_tipo_planta);
+        }
+
+        query += ' ORDER BY cb.nombre_cargo ASC';
 
         const [rows] = await pool.query(query, params);
         return rows;
     },
 
+
     // Obtener cargo base por ID
     getById: async (id) => {
-        const [rows] = await pool.query(
-            'SELECT * FROM cargos_base WHERE id_cargo_base = ?',
-            [id]
-        );
+        const [rows] = await pool.query(`
+            SELECT 
+                cb.*,
+                tp.id_tipo_planta as tipo_planta_id,
+                tp.codigo_tipo,
+                tp.nombre_tipo,
+                tp.color_representacion
+            FROM cargos_base cb
+            LEFT JOIN tipos_planta tp ON cb.id_tipo_planta = tp.id_tipo_planta
+            WHERE cb.id_cargo_base = ?
+        `, [id]);
         return rows[0];
     },
 
@@ -81,6 +108,7 @@ const CargoBaseModel = {
                 requiere_bonificacion = ?,
                 es_director_agencia = ?,
                 id_categoria_director = ?,
+                id_tipo_planta = ?,
                 activo = ?
             WHERE id_cargo_base = ?
         `;
@@ -91,6 +119,7 @@ const CargoBaseModel = {
             data.requiere_bonificacion,
             data.es_director_agencia,
             data.id_categoria_director,
+            data.id_tipo_planta,
             data.activo,
             id
         ];
@@ -98,6 +127,7 @@ const CargoBaseModel = {
         const [result] = await pool.query(query, values);
         return result;
     },
+
 
     // Eliminar (soft delete)
     delete: async (id) => {

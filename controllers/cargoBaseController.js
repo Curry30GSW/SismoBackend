@@ -11,6 +11,7 @@ const cargoBaseController = {
                 requiere_bonificacion,
                 es_director_agencia,
                 id_categoria_director,
+                id_tipo_planta,
                 activo
             } = req.body;
 
@@ -18,6 +19,12 @@ const cargoBaseController = {
             if (!codigo_cargo || !nombre_cargo) {
                 return res.status(400).json({
                     message: 'Código y nombre son requeridos'
+                });
+            }
+
+            if (!id_tipo_planta) {
+                return res.status(400).json({
+                    message: 'El tipo de planta es requerido'
                 });
             }
 
@@ -52,6 +59,7 @@ const cargoBaseController = {
                 requiere_bonificacion: requiere_bonificacion || false,
                 es_director_agencia: es_director_agencia || false,
                 id_categoria_director: id_categoria_director || null,
+                id_tipo_planta: id_tipo_planta,
                 activo: activo !== undefined ? activo : true
             });
 

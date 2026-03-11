@@ -18,6 +18,8 @@ const movimientoCargoRoutes = require('./routes/movimientoCargoRoutes');
 const historicoSalarioRoutes = require('./routes/historicoSalarioRoutes');
 const comparativoRoutes = require('./routes/comparativoRoutes');
 const configuracionPrestacionesRoutes = require('./routes/configuracionPrestacionesRoutes');
+const tipoPlantaRoutes = require('./routes/tipoPlantaRoutes');
+
 
 
 const cargoRoutes = require('./routes/CargoRoutes')
@@ -61,7 +63,7 @@ app.use('/api/movimientos-cargo', movimientoCargoRoutes);        // -> /api/movi
 app.use('/api/historico-salario', historicoSalarioRoutes);       // -> /api/historicos-salario
 app.use('/api/comparativo', comparativoRoutes);
 app.use('/api/prestaciones', configuracionPrestacionesRoutes); // -> /api/configuracion-prestaciones
-
+app.use('/api/tipos-planta', tipoPlantaRoutes);        // -> /api/tipos-planta
 
 //RUTAS
 app.use('/api', cargoRoutes)
