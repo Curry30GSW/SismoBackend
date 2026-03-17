@@ -7,24 +7,33 @@ const cookieParser = require('cookie-parser');
 const app = express();
 
 // =============================================
-// IMPORTS DE RUTAS - NUEVA ESTRUCTURA
+// IMPORTS DE RUTAS - PLANTA DE CARGOS
 // =============================================
-const anioLegalRoutes = require('./routes/anioLegalRoutes');
-const cargoBaseRoutes = require('./routes/cargoBaseRoutes');
-const funcionarioRoutes = require('./routes/funcionarioRoutes');
-const categoriaDirectorRoutes = require('./routes/categoriaDirectorRoutes');
-const posicionCargoRoutes = require('./routes/posicionCargoRoutes');
-const movimientoCargoRoutes = require('./routes/movimientoCargoRoutes');
-const historicoSalarioRoutes = require('./routes/historicoSalarioRoutes');
-const comparativoRoutes = require('./routes/comparativoRoutes');
-const configuracionPrestacionesRoutes = require('./routes/configuracionPrestacionesRoutes');
-const tipoPlantaRoutes = require('./routes/tipoPlantaRoutes');
-
-
-
-const cargoRoutes = require('./routes/CargoRoutes')
-const directoresCategoriasRoutes = require('./routes/DirectoresRoutes')
-const departamentoRoutes = require('./routes/DepartamentosRoutes')
+const anioLegalRoutes = require('./routes/plantaCargos/anioLegalRoutes');
+const cargoBaseRoutes = require('./routes/plantaCargos/cargoBaseRoutes');
+const funcionarioRoutes = require('./routes/plantaCargos/funcionarioRoutes');
+const categoriaDirectorRoutes = require('./routes/plantaCargos/categoriaDirectorRoutes');
+const movimientoCargoRoutes = require('./routes/plantaCargos/movimientoCargoRoutes');
+const historicoSalarioRoutes = require('./routes/plantaCargos/historicoSalarioRoutes');
+const comparativoRoutes = require('./routes/plantaCargos/comparativoRoutes');
+const configuracionPrestacionesRoutes = require('./routes/plantaCargos/configuracionPrestacionesRoutes');
+const tipoPlantaRoutes = require('./routes/plantaCargos/tipoPlantaRoutes');
+const posicionCargoRoutes = require('./routes/plantaCargos/posicionCargoRoutes');
+const posicionFijoRoutes = require('./routes/plantaCargos/posicionFijoRoutes');
+const posicionSenaRoutes = require('./routes/plantaCargos/posicionSenaRoutes');
+const cargoRoutes = require('./routes/plantaCargos/CargoRoutes');
+const directoresCategoriasRoutes = require('./routes/plantaCargos/DirectoresRoutes');
+const departamentoRoutes = require('./routes/plantaCargos/DepartamentosRoutes');
+// =============================================
+// IMPORTS DE RUTAS - CONTRATOS
+// =============================================
+const contratoRoutes = require('./routes/Contratos/contratoRoutes');
+const bancoRoutes = require('./routes/Contratos/bancoRoutes');
+const cajaCompensacionRoutes = require('./routes/Contratos/cajaCompensacionRoutes');
+const cesantiasRoutes = require('./routes/Contratos/cesantiasRoutes');
+const epsRoutes = require('./routes/Contratos/epsRoutes');
+const pensionesRoutes = require('./routes/Contratos/pensionesRoutes');
+const nivelRiesgoRoutes = require('./routes/Contratos/nivelRiesgoRoutes');
 
 dotenv.config({
     path: `.env.${process.env.NODE_ENV || 'development'}`
@@ -51,14 +60,15 @@ app.use(express.json());
 
 
 // =============================================
-// RUTAS - NUEVA ESTRUCTURA
+// RUTAS - PLANTA DE CARGOS
 // =============================================
-// Todas las rutas nuevas van con /api
 app.use('/api/anios', anioLegalRoutes);              // -> /api/anios-legales
 app.use('/api/cargos-base', cargoBaseRoutes);              // -> /api/cargos-base
 app.use('/api/funcionarios', funcionarioRoutes);            // -> /api/funcionarios
 app.use('/api/categorias-director', categoriaDirectorRoutes);      // -> /api/categorias-director
 app.use('/api/posiciones-cargo', posicionCargoRoutes);          // -> /api/posiciones-cargo
+app.use('/api/posiciones-fijo', posicionFijoRoutes);
+app.use('/api/posiciones-sena', posicionSenaRoutes)
 app.use('/api/movimientos-cargo', movimientoCargoRoutes);        // -> /api/movimientos-cargo
 app.use('/api/historico-salario', historicoSalarioRoutes);       // -> /api/historicos-salario
 app.use('/api/comparativo', comparativoRoutes);
@@ -70,6 +80,17 @@ app.use('/api', cargoRoutes)
 app.use('/api', directoresCategoriasRoutes)
 app.use('/api/dptos', departamentoRoutes)
 
+
+// =============================================
+// RUTAS - CONTRATOS
+// =============================================
+app.use('/api/contratos', contratoRoutes);
+app.use('/api/bancos', bancoRoutes);
+app.use('/api/cajas-compensacion', cajaCompensacionRoutes);
+app.use('/api/cesantias', cesantiasRoutes);
+app.use('/api/eps', epsRoutes);
+app.use('/api/pensiones', pensionesRoutes);
+app.use('/api/niveles-riesgo', nivelRiesgoRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {
