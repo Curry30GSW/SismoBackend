@@ -377,7 +377,66 @@ const FuncionarioModel = {
             ORDER BY al.anio DESC, pc.fecha_creacion_posicion DESC
         `, [idFuncionario]);
         return rows;
-    }
+    },
+
+
+    //CONTRATOS
+    getByDocumentoCompleto: async (tipo, numero) => {
+        const [rows] = await pool.query(`
+            SELECT 
+                f.*,
+                -- Datos de banco
+                b.id_banco,
+                b.nombre_banco,
+                -- Datos de EPS
+                e.id_eps,
+                e.nombre_eps,
+                e.codigo_eps,
+                -- Datos de Cesantías
+                c.id_cesantia,
+                c.nombre_cesantia,
+                c.codigo_cesantia,
+                -- Datos de Pensión
+                p.id_pension,
+                p.nombre_pension,
+                p.codigo_pension,
+                -- Datos de Caja de Compensación
+                cc.id_caja,
+                cc.nombre_caja,
+                cc.codigo_caja
+            FROM funcionarios f
+            LEFT JOIN bancos b ON f.id_banco = b.id_banco
+            LEFT JOIN eps e ON f.id_eps = e.id_eps
+            LEFT JOIN cesantias c ON f.id_cesantia = c.id_cesantia
+            LEFT JOIN pensiones p ON f.id_pension = p.id_pension
+            LEFT JOIN caja_compensacion cc ON f.id_caja_compensacion = cc.id_caja
+            WHERE f.tipo_documento = ? AND f.numero_documento = ? AND f.activo = true
+        `, [tipo, numero]);
+
+        return rows[0];
+    },
+
+    // Obtener posiciones activas de un funcionario
+    getPosicionesActivas: async (idFuncionario) => {
+        const [rows] = await pool.query(`
+            SELECT 
+                pc.id_posicion,
+                pc.codigo_posicion,
+                cb.nombre_cargo,
+                d.nombre_departamento,
+                al.anio,
+                pc.fecha_creacion_posicion,
+                pc.encargado
+            FROM posiciones_cargo pc
+            INNER JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
+            INNER JOIN departamentos d ON pc.id_departamento = d.id_departamento
+            INNER JOIN anios_legales al ON pc.id_anio_legal = al.id_anio_legal
+            WHERE pc.id_funcionario = ? AND pc.activo = true
+            ORDER BY al.anio DESC, pc.fecha_creacion_posicion DESC
+        `, [idFuncionario]);
+
+        return rows;
+    },
 };
 
 module.exports = FuncionarioModel;

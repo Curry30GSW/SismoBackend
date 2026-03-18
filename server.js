@@ -21,7 +21,6 @@ const tipoPlantaRoutes = require('./routes/plantaCargos/tipoPlantaRoutes');
 const posicionCargoRoutes = require('./routes/plantaCargos/posicionCargoRoutes');
 const posicionFijoRoutes = require('./routes/plantaCargos/posicionFijoRoutes');
 const posicionSenaRoutes = require('./routes/plantaCargos/posicionSenaRoutes');
-const cargoRoutes = require('./routes/plantaCargos/CargoRoutes');
 const directoresCategoriasRoutes = require('./routes/plantaCargos/DirectoresRoutes');
 const departamentoRoutes = require('./routes/plantaCargos/DepartamentosRoutes');
 // =============================================
@@ -76,7 +75,6 @@ app.use('/api/prestaciones', configuracionPrestacionesRoutes); // -> /api/config
 app.use('/api/tipos-planta', tipoPlantaRoutes);        // -> /api/tipos-planta
 
 //RUTAS
-app.use('/api', cargoRoutes)
 app.use('/api', directoresCategoriasRoutes)
 app.use('/api/dptos', departamentoRoutes)
 

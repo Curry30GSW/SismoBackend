@@ -39,16 +39,16 @@ const CargoBaseModel = {
     // Obtener todos los cargos base
     getAll: async (filtros = {}) => {
         let query = `
-            SELECT 
-                cb.*,
-                tp.id_tipo_planta as tipo_planta_id,
-                tp.codigo_tipo,
-                tp.nombre_tipo,
-                tp.color_representacion
-            FROM cargos_base cb
-            LEFT JOIN tipos_planta tp ON cb.id_tipo_planta = tp.id_tipo_planta
-            WHERE 1=1
-        `;
+        SELECT 
+            cb.*,
+            tp.id_tipo_planta as tipo_planta_id,
+            tp.codigo_tipo,
+            tp.nombre_tipo,
+            tp.color_representacion
+        FROM cargos_base cb
+        LEFT JOIN tipos_planta tp ON cb.id_tipo_planta = tp.id_tipo_planta
+        WHERE 1=1
+    `;
         let params = [];
 
         if (filtros.activo !== undefined) {
@@ -61,10 +61,16 @@ const CargoBaseModel = {
             params.push(filtros.es_director_agencia);
         }
 
-        // 🔥 NUEVO FILTRO POR TIPO DE PLANTA
+        // 🔥 FILTRO POR TIPO DE PLANTA (puede ser múltiple separado por comas)
         if (filtros.id_tipo_planta) {
-            query += ' AND cb.id_tipo_planta = ?';
-            params.push(filtros.id_tipo_planta);
+            const tipos = filtros.id_tipo_planta.split(',').map(Number);
+            if (tipos.length === 1) {
+                query += ' AND cb.id_tipo_planta = ?';
+                params.push(tipos[0]);
+            } else if (tipos.length > 1) {
+                query += ` AND cb.id_tipo_planta IN (${tipos.map(() => '?').join(',')})`;
+                params.push(...tipos);
+            }
         }
 
         query += ' ORDER BY cb.nombre_cargo ASC';

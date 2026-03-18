@@ -1,20 +1,20 @@
 const pool = require('../../config/ConectDb');
 
 const NivelRiesgoModel = {
-
+    // =============================================
+    // CREATE
+    // =============================================
     create: async (data) => {
         const query = `
-            INSERT INTO niveles_riesgo (
-                id_arl,
+            INSERT INTO nivel_riesgo (
                 clase_riesgo,
                 tarifa,
                 actividades,
                 activo
-            ) VALUES (?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?)
         `;
 
         const values = [
-            data.id_arl,
             data.clase_riesgo,
             data.tarifa,
             data.actividades,
@@ -25,53 +25,41 @@ const NivelRiesgoModel = {
         return { id_riesgo: result.insertId, ...data };
     },
 
-    getAll: async (activo = true) => {
+    // =============================================
+    // READ
+    // =============================================
+    getAll: async () => {
         const [rows] = await pool.query(`
-            SELECT nr.*, a.nombre_arl 
-            FROM niveles_riesgo nr
-            INNER JOIN arl a ON nr.id_arl = a.id_arl
-            WHERE nr.activo = ?
-            ORDER BY a.nombre_arl, nr.clase_riesgo
-        `, [activo]);
+            SELECT * FROM nivel_riesgo 
+            ORDER BY clase_riesgo
+        `);
         return rows;
     },
 
     getById: async (id) => {
         const [rows] = await pool.query(`
-            SELECT nr.*, a.nombre_arl 
-            FROM niveles_riesgo nr
-            INNER JOIN arl a ON nr.id_arl = a.id_arl
-            WHERE nr.id_riesgo = ?
+            SELECT * FROM nivel_riesgo 
+            WHERE id_riesgo = ?
         `, [id]);
         return rows[0];
     },
 
-    getByArl: async (idArl) => {
-        const [rows] = await pool.query(`
-            SELECT * FROM niveles_riesgo 
-            WHERE id_arl = ? AND activo = true
-            ORDER BY clase_riesgo
-        `, [idArl]);
-        return rows;
-    },
-
+    // =============================================
+    // UPDATE
+    // =============================================
     update: async (id, data) => {
         const query = `
-            UPDATE niveles_riesgo SET
-                id_arl = ?,
+            UPDATE nivel_riesgo SET
                 clase_riesgo = ?,
                 tarifa = ?,
-                actividades = ?,
-                activo = ?
+                actividades = ?
             WHERE id_riesgo = ?
         `;
 
         const values = [
-            data.id_arl,
             data.clase_riesgo,
             data.tarifa,
             data.actividades,
-            data.activo,
             id
         ];
 
@@ -79,9 +67,12 @@ const NivelRiesgoModel = {
         return result;
     },
 
+    // =============================================
+    // DELETE (SOFT DELETE)
+    // =============================================
     delete: async (id) => {
         const [result] = await pool.query(
-            'UPDATE niveles_riesgo SET activo = false WHERE id_riesgo = ?',
+            'UPDATE nivel_riesgo SET activo = false WHERE id_riesgo = ?',
             [id]
         );
         return result;

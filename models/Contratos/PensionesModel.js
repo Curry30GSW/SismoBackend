@@ -7,27 +7,24 @@ const PensionesModel = {
                 codigo_pension,
                 nit_pension,
                 nombre_pension,
-                nombre_aporte,
-                activo
-            ) VALUES (?, ?, ?, ?, ?)
+                nombre_aporte
+            ) VALUES (?, ?, ?, ?)
         `;
 
         const values = [
             data.codigo_pension,
             data.nit_pension,
             data.nombre_pension,
-            data.nombre_aporte,
-            data.activo !== undefined ? data.activo : true
+            data.nombre_aporte
         ];
 
         const [result] = await pool.query(query, values);
         return { id_pension: result.insertId, ...data };
     },
 
-    getAll: async (activo = true) => {
+    getAll: async () => {
         const [rows] = await pool.query(
-            'SELECT * FROM pensiones WHERE activo = ? ORDER BY nombre_pension',
-            [activo]
+            'SELECT * FROM pensiones ORDER BY nombre_pension'
         );
         return rows;
     },
@@ -54,8 +51,7 @@ const PensionesModel = {
                 codigo_pension = ?,
                 nit_pension = ?,
                 nombre_pension = ?,
-                nombre_aporte = ?,
-                activo = ?
+                nombre_aporte = ?
             WHERE id_pension = ?
         `;
 
@@ -63,9 +59,7 @@ const PensionesModel = {
             data.codigo_pension,
             data.nit_pension,
             data.nombre_pension,
-            data.nombre_aporte,
-            data.activo,
-            id
+            data.nombre_aporte
         ];
 
         const [result] = await pool.query(query, values);

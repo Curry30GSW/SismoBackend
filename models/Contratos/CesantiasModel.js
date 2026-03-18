@@ -24,10 +24,9 @@ const CesantiasModel = {
         return { id_cesantias: result.insertId, ...data };
     },
 
-    getAll: async (activo = true) => {
+    getAll: async () => {
         const [rows] = await pool.query(
-            'SELECT * FROM cesantias WHERE activo = ? ORDER BY nombre_cesantia',
-            [activo]
+            'SELECT * FROM cesantias ORDER BY nombre_cesantia'
         );
         return rows;
     },

@@ -4,7 +4,6 @@ const nivelRiesgoController = require('../../controllers/Contratos/nivelRiesgoCo
 
 router.post('/', nivelRiesgoController.create);
 router.get('/', nivelRiesgoController.getAll);
-router.get('/arl/:id_arl', nivelRiesgoController.getByArl);
 router.get('/:id', nivelRiesgoController.getById);
 router.put('/:id', nivelRiesgoController.update);
 router.delete('/:id', nivelRiesgoController.delete);

@@ -1,41 +1,19 @@
 const NivelRiesgoModel = require('../../models/Contratos/NivelRiesgoModel');
 
 const nivelRiesgoController = {
-    // =============================================
-    // CREATE
-    // =============================================
+    // Crear nivel de riesgo
     create: async (req, res) => {
         try {
-            const { id_arl, clase_riesgo, tarifa, actividades, activo } = req.body;
+            const data = req.body;
 
-            if (!id_arl) {
+            if (!data.clase_riesgo || !data.tarifa || !data.actividades) {
                 return res.status(400).json({
                     success: false,
-                    message: 'El ID de la ARL es requerido'
+                    message: 'clase_riesgo, tarifa y actividades son requeridos'
                 });
             }
 
-            if (!clase_riesgo) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'La clase de riesgo es requerida'
-                });
-            }
-
-            if (!tarifa) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'La tarifa es requerida'
-                });
-            }
-
-            const result = await NivelRiesgoModel.create({
-                id_arl,
-                clase_riesgo,
-                tarifa,
-                actividades,
-                activo
-            });
+            const result = await NivelRiesgoModel.create(data);
 
             res.status(201).json({
                 success: true,
@@ -44,23 +22,16 @@ const nivelRiesgoController = {
             });
 
         } catch (error) {
-            console.error('Error en create NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            console.error('Error en create nivel riesgo:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
-    // =============================================
-    // READ
-    // =============================================
+    // Obtener todos los niveles de riesgo
     getAll: async (req, res) => {
         try {
             const { activo } = req.query;
-            const filterActivo = activo !== undefined ? activo === 'true' : true;
-
-            const niveles = await NivelRiesgoModel.getAll(filterActivo);
+            const niveles = await NivelRiesgoModel.getAll(activo !== 'false');
 
             res.json({
                 success: true,
@@ -69,18 +40,15 @@ const nivelRiesgoController = {
             });
 
         } catch (error) {
-            console.error('Error en getAll NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            console.error('Error en getAll nivel riesgo:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
+    // Obtener nivel de riesgo por ID
     getById: async (req, res) => {
         try {
             const { id } = req.params;
-
             const nivel = await NivelRiesgoModel.getById(id);
 
             if (!nivel) {
@@ -90,64 +58,29 @@ const nivelRiesgoController = {
                 });
             }
 
-            res.json({
-                success: true,
-                data: nivel
-            });
+            res.json({ success: true, data: nivel });
 
         } catch (error) {
-            console.error('Error en getById NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            console.error('Error en getById nivel riesgo:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
-    getByArl: async (req, res) => {
-        try {
-            const { id_arl } = req.params;
-
-            const niveles = await NivelRiesgoModel.getByArl(id_arl);
-
-            res.json({
-                success: true,
-                data: niveles,
-                total: niveles.length
-            });
-
-        } catch (error) {
-            console.error('Error en getByArl NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
-        }
-    },
-
-    // =============================================
-    // UPDATE
-    // =============================================
+    // Actualizar nivel de riesgo
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { id_arl, clase_riesgo, tarifa, actividades, activo } = req.body;
+            const data = req.body;
 
-            const nivelExistente = await NivelRiesgoModel.getById(id);
-            if (!nivelExistente) {
+            const existente = await NivelRiesgoModel.getById(id);
+            if (!existente) {
                 return res.status(404).json({
                     success: false,
                     message: 'Nivel de riesgo no encontrado'
                 });
             }
 
-            await NivelRiesgoModel.update(id, {
-                id_arl,
-                clase_riesgo,
-                tarifa,
-                actividades,
-                activo
-            });
+            await NivelRiesgoModel.update(id, data);
 
             res.json({
                 success: true,
@@ -155,23 +88,18 @@ const nivelRiesgoController = {
             });
 
         } catch (error) {
-            console.error('Error en update NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            console.error('Error en update nivel riesgo:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
-    // =============================================
-    // DELETE (SOFT DELETE)
-    // =============================================
+    // Eliminar nivel de riesgo
     delete: async (req, res) => {
         try {
             const { id } = req.params;
 
-            const nivelExistente = await NivelRiesgoModel.getById(id);
-            if (!nivelExistente) {
+            const existente = await NivelRiesgoModel.getById(id);
+            if (!existente) {
                 return res.status(404).json({
                     success: false,
                     message: 'Nivel de riesgo no encontrado'
@@ -182,15 +110,12 @@ const nivelRiesgoController = {
 
             res.json({
                 success: true,
-                message: 'Nivel de riesgo desactivado exitosamente'
+                message: 'Nivel de riesgo eliminado exitosamente'
             });
 
         } catch (error) {
-            console.error('Error en delete NivelRiesgo:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            console.error('Error en delete nivel riesgo:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     }
 };

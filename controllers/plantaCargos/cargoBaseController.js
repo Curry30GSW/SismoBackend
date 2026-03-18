@@ -76,11 +76,12 @@ const cargoBaseController = {
     // 2. OBTENER TODOS LOS CARGOS BASE
     getAll: async (req, res) => {
         try {
-            const { activo, es_director_agencia } = req.query;
+            const { activo, es_director_agencia, id_tipo_planta } = req.query;
 
             const filtros = {
                 activo: activo !== undefined ? activo === 'true' : undefined,
-                es_director_agencia: es_director_agencia !== undefined ? es_director_agencia === 'true' : undefined
+                es_director_agencia: es_director_agencia !== undefined ? es_director_agencia === 'true' : undefined,
+                id_tipo_planta: id_tipo_planta || undefined
             };
 
             const data = await CargoBaseModel.getAll(filtros);
