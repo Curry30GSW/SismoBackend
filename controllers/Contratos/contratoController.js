@@ -8,6 +8,50 @@ const CajaCompensacionModel = require('../../models/Contratos/CajaCompensacionMo
 const NivelRiesgoModel = require('../../models/Contratos/NivelRiesgoModel');
 const PosicionCargoModel = require('../../models/plantaCargos/PosicionCargoModel');
 const CargoBaseModel = require('../../models/plantaCargos/CargoBaseModel');
+const pool = require('../../config/ConectDb');
+
+async function generarNumeroContrato(tipoContrato) {
+    // Definir el prefijo según el tipo de contrato
+    let prefijo;
+    switch (tipoContrato) {
+        case 'TERMINO_FIJO':
+            prefijo = 'CTF';
+            break;
+        case 'INDEFINIDO':
+            prefijo = 'CTI';
+            break;
+        case 'APRENDIZ':
+            prefijo = 'CMA';
+            break;
+        default:
+            prefijo = 'CTR'; // Contrato regular
+    }
+
+    // Buscar el último número usado para este tipo de contrato
+    const [result] = await pool.query(`
+        SELECT numero_contrato 
+        FROM contratos 
+        WHERE numero_contrato LIKE ?
+        ORDER BY id_contrato DESC 
+        LIMIT 1
+    `, [`${prefijo}-%`]);
+
+    let ultimoNumero = 0;
+
+    if (result.length > 0 && result[0].numero_contrato) {
+        // Extraer el número del último contrato (ej: CTF-001 -> 1)
+        const partes = result[0].numero_contrato.split('-');
+        if (partes.length >= 2) {
+            ultimoNumero = parseInt(partes[1]) || 0;
+        }
+    }
+
+    // Generar el nuevo número (incrementar en 1)
+    const nuevoNumero = (ultimoNumero + 1).toString().padStart(3, '0');
+
+    return `${prefijo}-${nuevoNumero}`;
+}
+
 
 const contratoController = {
     // =============================================
@@ -182,7 +226,6 @@ const contratoController = {
         }
     },
 
-
     getPosicionesDisponibles: async (req, res) => {
         try {
             const { id_anio_legal } = req.params;
@@ -209,7 +252,6 @@ const contratoController = {
         }
     },
 
-
     // =============================================
     // CRUD CONTRATOS
     // =============================================
@@ -234,12 +276,22 @@ const contratoController = {
                 return res.status(400).json({ success: false, message: 'El salario debe ser mayor a 0' });
             }
 
-            const idContrato = await ContratoModel.create(data);
+            const numeroContrato = await generarNumeroContrato(data.tipo_contrato);
+
+            const datosConNumero = {
+                ...data,
+                numero_contrato: numeroContrato
+            };
+
+            const idContrato = await ContratoModel.create(datosConNumero);
 
             res.status(201).json({
                 success: true,
                 message: 'Contrato creado exitosamente',
-                data: { id_contrato: idContrato }
+                data: {
+                    id_contrato: idContrato,
+                    numero_contrato: numeroContrato
+                }
             });
 
         } catch (error) {
@@ -247,7 +299,6 @@ const contratoController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
 
     getById: async (req, res) => {
         try {
@@ -499,5 +550,6 @@ const contratoController = {
         }
     }
 };
+
 
 module.exports = contratoController;

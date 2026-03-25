@@ -175,8 +175,13 @@ const ContratoModel = {
                     arl,
                     id_riesgo,
                     estado,
+                    numero_grupo,
+                    centro_formacion,
+                    especialidad,
+                    instituto_formacion,
+                    otro_instituto,
                     usuario_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 data.id_funcionario,
                 data.id_posicion,
@@ -195,6 +200,11 @@ const ContratoModel = {
                 data.arl || null,
                 data.id_riesgo || null,
                 'ACTIVO',
+                data.numero_grupo || null,
+                data.centro_formacion || null,
+                data.especialidad || null,
+                data.instituto_formacion || null,
+                data.otro_instituto || null,
                 data.usuario_creacion || 'SISTEMA'
             ]);
 

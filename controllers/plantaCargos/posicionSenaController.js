@@ -4,6 +4,7 @@ const CargoBaseModel = require('../../models/plantaCargos/CargoBaseModel');
 const DepartamentoModel = require('../../models/plantaCargos/DepartamentosModel');
 const HistoricoSalarioModel = require('../../models/plantaCargos/HistoricoSalarioModel');
 const FuncionarioModel = require('../../models/plantaCargos/FuncionarioModel');
+const pool = require('../../config/ConectDb');
 
 // Función auxiliar para generar códigos secuenciales (adaptada para SENA)
 async function generarCodigosPosicionSecuenciales(idCargoBase, idDepartamento, idAnioLegal, cantidad) {
@@ -107,19 +108,7 @@ const posicionSenaController = {
             const departamento = await DepartamentoModel.findById(primerItem.id_departamento);
             if (!departamento) return res.status(404).json({ message: 'Departamento no encontrado' });
 
-            const salarioConfigurado = await HistoricoSalarioModel.getByCargoAndAnio(
-                primerItem.id_cargo_base,
-                primerItem.id_anio_legal
-            );
 
-            if (!salarioConfigurado) {
-                return res.status(400).json({
-                    message: 'El cargo seleccionado no tiene salario configurado para el año actual'
-                });
-            }
-
-            const dosSMLV = anioLegal.salario_minimo_legal * 2;
-            const aplicaAuxilioCalculado = salarioConfigurado.salario_base <= dosSMLV;
             const sede_ubicacion = departamento.nombre_departamento;
 
             const codigosPosicion = await generarCodigosPosicionSecuenciales(

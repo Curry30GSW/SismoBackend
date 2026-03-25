@@ -64,6 +64,7 @@ const PosicionFijoModel = {
                 pf.activo,
                 pf.id_funcionario,
                 pf.encargado,
+                pf.salario_base,
                 
                 -- Datos del cargo
                 cb.nombre_cargo,
@@ -80,7 +81,6 @@ const PosicionFijoModel = {
                 al.auxilio_transporte,
                 
                 -- Datos del histórico de salarios
-                hsc.salario_base,
                 hsc.bonificacion,
                 hsc.aplica_auxilio_transporte,
                 

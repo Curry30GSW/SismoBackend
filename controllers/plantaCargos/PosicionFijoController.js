@@ -100,30 +100,42 @@ const posicionFijoController = {
                 });
             }
 
+            // Validar año legal
             const anioLegal = await AnioLegalModel.getById(primerItem.id_anio_legal);
-            if (!anioLegal) return res.status(404).json({ message: 'Año legal no encontrado' });
-
-            const cargoBase = await CargoBaseModel.getById(primerItem.id_cargo_base);
-            if (!cargoBase) return res.status(404).json({ message: 'Cargo base no encontrado' });
-
-            const departamento = await DepartamentoModel.findById(primerItem.id_departamento);
-            if (!departamento) return res.status(404).json({ message: 'Departamento no encontrado' });
-
-            const salarioConfigurado = await HistoricoSalarioModel.getByCargoAndAnio(
-                primerItem.id_cargo_base,
-                primerItem.id_anio_legal
-            );
-
-            if (!salarioConfigurado) {
-                return res.status(400).json({
-                    message: 'El cargo seleccionado no tiene salario configurado para el año actual'
-                });
+            if (!anioLegal) {
+                return res.status(404).json({ message: 'Año legal no encontrado' });
             }
 
-            const dosSMLV = anioLegal.salario_minimo_legal * 2;
-            const aplicaAuxilioCalculado = salarioConfigurado.salario_base <= dosSMLV;
-            const sede_ubicacion = departamento.nombre_departamento;
+            // Validar cargo base
+            const cargoBase = await CargoBaseModel.getById(primerItem.id_cargo_base);
+            if (!cargoBase) {
+                return res.status(404).json({ message: 'Cargo base no encontrado' });
+            }
 
+            // Validar departamento
+            const departamento = await DepartamentoModel.findById(primerItem.id_departamento);
+            if (!departamento) {
+                return res.status(404).json({ message: 'Departamento no encontrado' });
+            }
+
+            // 🔥 ELIMINAR VALIDACIÓN DE SALARIO CONFIGURADO
+            // Los salarios para posiciones fijas vienen directamente del contrato, no del histórico
+
+            // Obtener valores del primer item (vienen del frontend)
+            const salarioFinal = primerItem.salario_base;
+            if (!salarioFinal || salarioFinal <= 0) {
+                return res.status(400).json({ message: 'El salario base es requerido y debe ser mayor a 0' });
+            }
+
+            const sede_ubicacion = departamento.nombre_departamento;
+            const dosSMLV = anioLegal.salario_minimo_legal * 2;
+
+            // Calcular si aplica auxilio de transporte basado en el salario ingresado
+            const aplicaAuxilioFinal = primerItem.aplica_auxilio_transporte !== undefined
+                ? primerItem.aplica_auxilio_transporte
+                : (salarioFinal <= dosSMLV);
+
+            // Generar códigos de posición secuenciales
             const codigosPosicion = await generarCodigosPosicionSecuenciales(
                 primerItem.id_cargo_base,
                 primerItem.id_departamento,
@@ -139,13 +151,13 @@ const posicionFijoController = {
                         codigo_posicion: codigosPosicion[i],
                         id_departamento: primerItem.id_departamento,
                         sede_ubicacion,
-                        salario_base: salarioConfigurado.salario_base,
-                        aplica_auxilio_transporte: aplicaAuxilioCalculado,
-                        bonificacion: salarioConfigurado.bonificacion || 0,
+                        salario_base: salarioFinal,
+                        aplica_auxilio_transporte: aplicaAuxilioFinal,
+                        bonificacion: primerItem.bonificacion || 0,
                         fecha_creacion_posicion: new Date(),
                         activo: true,
-                        id_funcionario: null,
-                        encargado: 0
+                        id_funcionario: primerItem.id_funcionario || null,
+                        encargado: primerItem.encargado || 0
                     });
 
                     resultados.push({
@@ -155,6 +167,7 @@ const posicionFijoController = {
                     });
 
                 } catch (error) {
+                    console.error(`Error creando posición ${i + 1}:`, error);
                     errores.push({ index: i, error: error.message });
                 }
             }
@@ -169,102 +182,6 @@ const posicionFijoController = {
             res.status(500).json({ message: error.message });
         }
     },
-
-
-//     create: async (req, res) => {
-//     try {
-//         const { posiciones } = req.body;
-
-//         if (!posiciones || !Array.isArray(posiciones) || posiciones.length === 0) {
-//             return res.status(400).json({ message: 'Debe enviar un array de posiciones' });
-//         }
-
-//         if (posiciones.length > 50) {
-//             return res.status(400).json({ message: 'No se pueden crear más de 50 posiciones a la vez' });
-//         }
-
-//         const resultados = [];
-//         const errores = [];
-
-//         // Validar que todos tengan el mismo cargo, departamento y año
-//         const primerItem = posiciones[0];
-//         const mismoCargo = posiciones.every(p => p.id_cargo_base === primerItem.id_cargo_base);
-//         const mismoDepartamento = posiciones.every(p => p.id_departamento === primerItem.id_departamento);
-//         const mismoAnio = posiciones.every(p => p.id_anio_legal === primerItem.id_anio_legal);
-
-//         if (!mismoCargo || !mismoDepartamento || !mismoAnio) {
-//             return res.status(400).json({
-//                 message: 'Todas las posiciones deben tener el mismo cargo, departamento y año'
-//             });
-//         }
-
-//         // Validar existencia
-//         const anioLegal = await AnioLegalModel.getById(primerItem.id_anio_legal);
-//         if (!anioLegal) return res.status(404).json({ message: 'Año legal no encontrado' });
-
-//         const cargoBase = await CargoBaseModel.getById(primerItem.id_cargo_base);
-//         if (!cargoBase) return res.status(404).json({ message: 'Cargo base no encontrado' });
-
-//         const departamento = await DepartamentoModel.findById(primerItem.id_departamento);
-//         if (!departamento) return res.status(404).json({ message: 'Departamento no encontrado' });
-
-//         // Validar que el salario no sea menor al mínimo legal
-//         const salarioMinimoLegal = anioLegal.salario_minimo_legal;
-//         if (primerItem.salario_base < salarioMinimoLegal) {
-//             return res.status(400).json({
-//                 message: `El salario (${primerItem.salario_base}) no puede ser menor al mínimo legal (${salarioMinimoLegal})`
-//             });
-//         }
-
-//         const sede_ubicacion = departamento.nombre_departamento;
-
-//         const codigosPosicion = await generarCodigosPosicionSecuenciales(
-//             primerItem.id_cargo_base,
-//             primerItem.id_departamento,
-//             primerItem.id_anio_legal,
-//             posiciones.length
-//         );
-
-//         for (let i = 0; i < posiciones.length; i++) {
-//             try {
-//                 const posicionActual = posiciones[i];
-                
-//                 const result = await PosicionFijoModel.create({
-//                     id_cargo_base: posicionActual.id_cargo_base,
-//                     id_anio_legal: posicionActual.id_anio_legal,
-//                     codigo_posicion: codigosPosicion[i],
-//                     id_departamento: posicionActual.id_departamento,
-//                     sede_ubicacion,
-//                     salario_base: posicionActual.salario_base, // ✅ USAR el enviado
-//                     aplica_auxilio_transporte: posicionActual.aplica_auxilio_transporte, // ✅ USAR el enviado
-//                     bonificacion: posicionActual.bonificacion || 0, // ✅ USAR el enviado
-//                     fecha_creacion_posicion: posicionActual.fecha_desde ? new Date(posicionActual.fecha_desde) : new Date(), // ✅ USAR fecha enviada
-//                     activo: posicionActual.activo !== undefined ? posicionActual.activo : true,
-//                     id_funcionario: posicionActual.id_funcionario || null, // ✅ USAR el enviado
-//                     encargado: posicionActual.encargado || 0
-//                 });
-
-//                 resultados.push({
-//                     id_posicion: result.id_posicion_fijo,
-//                     codigo_posicion: codigosPosicion[i],
-//                     success: true
-//                 });
-
-//             } catch (error) {
-//                 errores.push({ index: i, error: error.message });
-//             }
-//         }
-
-//         res.status(201).json({
-//             message: `Procesadas ${resultados.length} posiciones${errores.length > 0 ? `, ${errores.length} errores` : ''}`,
-//             data: { exitosas: resultados, errores }
-//         });
-
-//     } catch (error) {
-//         console.error('Error en create posiciones fijas:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// },
 
     // =============================================
     // READ
