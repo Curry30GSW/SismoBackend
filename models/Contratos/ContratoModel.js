@@ -1,7 +1,8 @@
 const pool = require('../../config/ConectDb');
 
 
-function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, lugarLabores) {
+function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}) {
+
     // Cláusulas comunes a todos los contratos
     const clausulasComunes = [
         {
@@ -86,6 +87,206 @@ PARÁGRAFO TERCERO: Las partes acuerdan que en los casos en que se le reconozcan
             }
         ];
     }
+
+    if (tipoContrato === 'APRENDIZ') {
+        // Formatear fechas
+        const fechaInicioObj = new Date(fechaInicio);
+        const fechaFinObj = new Date(fechaFin);
+
+        const diaInicio = fechaInicioObj.getDate();
+        const mesInicio = fechaInicioObj.toLocaleString('es', { month: 'short' }).toUpperCase();
+        const añoInicio = fechaInicioObj.getFullYear();
+
+        const diaFin = fechaFinObj.getDate();
+        const mesFin = fechaFinObj.toLocaleString('es', { month: 'short' }).toUpperCase();
+        const añoFin = fechaFinObj.getFullYear();
+
+        // Calcular meses de duración
+        const diffTime = Math.abs(fechaFinObj - fechaInicioObj);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const meses = Math.round(diffDays / 30);
+
+        // Obtener datos del aprendiz
+        const especialidad = datosAprendiz.especialidad || cargo || 'la formación establecida';
+        const grupo = datosAprendiz.numero_grupo || '';
+        const centroFormacion = datosAprendiz.centro_formacion || 'CENTRO DE FORMACIÓN PROFESIONAL';
+        const institutoFormacion = datosAprendiz.instituto_formacion === 'OTRO'
+            ? datosAprendiz.otro_instituto
+            : datosAprendiz.instituto_formacion || 'SENA';
+        const arl = datosAprendiz.arl || 'ARL CONTRATADA POR LA EMPRESA';
+
+        // Determinar porcentaje de salario según etapa
+        const salarioNumerico = datosAprendiz.salario || 0;
+        const smlv = datosAprendiz.salarioMinimoAnual || 0;
+        const porcentaje = smlv > 0 ? (salarioNumerico / smlv) * 100 : 75;
+        const porcentajeTexto = porcentaje === 75 ? '75%' : porcentaje === 100 ? '100%' : `${porcentaje.toFixed(0)}%`;
+
+        // Determinar si es universitario
+        const esUniversitario = datosAprendiz.esUniversitario || false;
+
+        // Fechas de etapas (si no se envían, usar las del contrato)
+        const fechaInicioelectiva = datosAprendiz.fecha_fase_electiva_inicio || fechaInicio;
+        const fechaFinelectiva = datosAprendiz.fecha_fase_electiva_fin || fechaInicio;
+        const fechaInicioPractica = datosAprendiz.fecha_fase_practica_inicio || fechaInicio;
+        const fechaFinPractica = datosAprendiz.fecha_fase_practica_fin || fechaFin;
+
+
+
+        const formatearFechaClausula = (fechaStr) => {
+            if (!fechaStr) return '';
+
+            const [year, month, day] = fechaStr.split('-').map(Number);
+            const fecha = new Date(year, month - 1, day); // month - 1 porque los meses son 0-indexados
+
+            const dia = fecha.getDate();
+            const mes = fecha.toLocaleString('es', { month: 'short' }).toUpperCase();
+            const anio = fecha.getFullYear();
+
+            return `${dia} de ${mes} de ${anio}`;
+        };
+
+
+        return [
+            {
+                titulo: 'PRIMERA.- OBJETO',
+                contenido: `El presente contrato tiene como objeto garantizar al APRENDIZ la formación profesional metódica y completa en la especialidad de ${especialidad} Grupo ${grupo}, la cual se impartirá en su etapa lectiva en los ambientes de formación del ${centroFormacion} (Centro de Formación Profesional del ${institutoFormacion}), y en su etapa práctica se desarrollará en los ambientes reales de trabajo de la EMPRESA PATROCINADORA.`,
+                orden: 1
+            },
+            {
+                titulo: 'SEGUNDA – DURACIÓN',
+                contenido: `El presente contrato tiene un término de duración de ${meses} meses, comprendidos entre el Día ${diaInicio} Mes ${mesInicio} Año ${añoInicio} fecha de iniciación del Contrato; y el Día ${diaFin} Mes ${mesFin} Año ${añoFin} fecha de terminación de este. Esta duración deberá ajustarse al diseño curricular del programa de formación y no podrá exceder de TRES (3) años, de conformidad con lo dispuesto por el artículo 81 del Código Sustantivo del Trabajo y previa revisión de la normatividad formativa aplicable a cada una de las modalidades de formación.`,
+                orden: 2
+            },
+            {
+                titulo: 'TERCERA – MODALIDAD DE FORMACIÓN',
+                contenido: `La formación será de tipo ${datosAprendiz.modalidad_formacion || 'tradicional'}, compuesta por las siguientes fases:
+
+Fase Electiva: del ${formatearFechaClausula(fechaInicioelectiva)} al ${formatearFechaClausula(fechaFinelectiva)}.
+Fase Práctica: del ${formatearFechaClausula(fechaInicioPractica)} al ${formatearFechaClausula(fechaFinPractica)}.`,
+                orden: 3
+            },
+            {
+                titulo: 'CUARTA. NATURALEZA JURÍDICA',
+                contenido: `El presente contrato de aprendizaje tiene el carácter de laboral especial y a término fijo, conforme al artículo 81 del Código Sustantivo del Trabajo, modificado por el artículo 21 de la Ley 2466 de 2025. Su finalidad es facilitar la formación teórico-práctica del aprendiz en la ocupación, oficio o profesión de ${especialidad}, en concordancia con el programa de formación de la institución educativa ${institutoFormacion}.`,
+                orden: 4
+            },
+            {
+                titulo: 'QUINTA – APOYO DE SOSTENIMIENTO MENSUAL',
+                contenido: `Durante la vigencia del contrato, la EMPRESA PATROCINADORA se compromete a pagar al APRENDIZ un apoyo de sostenimiento mensual durante toda la formación y siendo equivalente a:
+
+${porcentajeTexto} del salario mínimo legal mensual vigente, según la etapa y modalidad de formación.
+
+${esUniversitario ? 'En caso de ser estudiante universitario, el apoyo será de 100% del salario mínimo legal mensual vigente, sin importar la modalidad.' : ''}
+
+En caso de ser formación dual, el APRENDIZ recibirá como mínimo durante el primer año el equivalente al setenta y cinco por ciento (75%) de un (1) salario mínimo legal mensual vigente y durante el segundo año el equivalente al cien por ciento (100%) de un (1) salario mínimo legal mensual vigente o proporcional de acuerdo con el diseño curricular. La duración de la alternancia podrá ser menor o mayor, sin superar de tres (3) años, caso en el cual la distribución teórica/práctica deberá ser, como mínimo, de 50% [teoría] y 50% [práctica], en relación con el tiempo total de la duración del programa dispuesto en sus diseños curriculares y los pagos corresponderán a cada etapa según la alternancia.
+
+PARAGRAFO. Atendiendo lo dispuesto en el artículo 81 del Código Sustantivo del Trabajo, modificado por la Ley 2466 de 2025, en ningún caso el apoyo de sostenimiento mensual podrá ser regulado a través de convenios o contratos colectivos o fallos arbitrales recaídos en una negociación colectiva.`,
+                orden: 5
+            },
+            {
+                titulo: 'SEXTA – SEGURIDAD SOCIAL',
+                contenido: `LA EMPRESA garantizará la afiliación y pago mensual de la cotización del APRENDIZ al Sistema de Seguridad Social, conforme a la etapa del contrato:
+
+Formación tradicional 
+•	Fase lectiva: salud y riesgos laborales, pagados en su totalidad por la empresa.
+•	Fase práctica: salud, pensión y riesgos laborales, pagado conforme al régimen de trabajadores dependientes.
+
+Formación dual
+•	Afiliación y cotización al sistema general de seguridad social en salud, pensión y riesgos laborales, así como el derecho a prestaciones, auxilios, y demás derechos propios de un contrato de trabajo.
+
+Estudiante universitario
+•	La afiliación al sistema de seguridad social depende la etapa: fase lectiva se surte la afiliación a salud y riesgos laborales; para fase práctica, salud, pensiones y riesgos laborales, así como el, así como el derecho a prestaciones, auxilios, y demás derechos propios de un contrato de trabajo.`,
+                orden: 6
+            },
+            {
+                titulo: 'SÉPTIMA – DERECHOS LABORALES EN LA ETAPA PRÁCTICA',
+                contenido: `Durante la etapa práctica o durante toda la formación dual, EL APRENDIZ tendrá derecho al reconocimiento y pago a cargo de la EMPRESA PATROCINADORA de todas las prestaciones, auxilios y demás derechos propios del contrato laboral, incluyendo:
+
+•	Prima de servicios
+•	Cesantías e intereses
+•	Vacaciones
+•	Dotación
+•	Auxilio de transporte
+•	Subsidio familiar
+•	Pago de horas extra, nocturnas y en días festivos (cuando aplique)`,
+                orden: 7
+            },
+            {
+                titulo: 'OCTAVA–SUBORDINACIÓN JURÍDICA',
+                contenido: `La subordinación estará referida exclusivamente a las actividades propias del aprendizaje, conforme al reglamento interno de trabajo de LA EMPRESA y al reglamento formativo del estudiante, por lo cual, se excluye de este contrato toda forma de subordinación laboral.
+
+Parágrafo. De conformidad con lo dispuesto por el parágrafo 4° del artículo 15 de la Ley 1780 de 2016, si las actividades que se desarrollan no están directamente relacionadas con el área de estudio la práctica laboral mutará a relación laboral con sus implicaciones legales.`,
+                orden: 8
+            },
+            {
+                titulo: 'NOVENA – OBLIGACIONES',
+                contenido: `1. POR PARTE DE LA EMPRESA. - En virtud del presente contrato la EMPRESA PATROCINADORA deberá:
+
+1.1. Reconocer y pagar al APRENDIZ el apoyo de sostenimiento mensual correspondiente a la fase de formación en la que se encuentre.
+
+a. Facilitar al APRENDIZ los medios para que tanto en las fases lectiva y productiva, reciba formación profesional metódica y completa requerida en el oficio, actividad, ocupación o profesión y esto le implique desempeñarse dentro del manejo administrativo, operativo, comercial o financiero propios del giro ordinario de las actividades de la empresa.
+
+b. Diligenciar y reportar al respectivo Centro de Formación Profesional Integral del ${institutoFormacion} las evaluaciones y certificaciones del APRENDIZ en su fase productiva del aprendizaje.
+
+c. Afiliar al APRENDIZ, durante las fases lectiva y productiva de la formación, a la Aseguradora de Riesgos Laborales ${arl}, de conformidad con lo dispuesto por el artículo 81 del Código Sustantivo del Trabajo, modificado por la Ley 2466 de 2025. El aporte al riesgo laboral corresponderá al del nivel de riesgo de la empresa y de sus funciones.
+
+d. Afiliar al APRENDIZ y efectuar, durante las fases lectiva y productiva de la formación, el pago mensual del aporte al régimen de Seguridad Social Integral, de conformidad con lo indicado en la cláusula sexta del presente contrato.
+
+e. Otorgar y reconocer al APRENDIZ todas las prestaciones, auxilios y demás derechos propios del contrato laboral, conforme se dispone en el presente contrato y en el artículo 81 del Código Sustantivo del Trabajo.
+
+2. POR PARTE DEL APRENDIZ
+
+Por su parte, el aprendiz se compromete en virtud del presente contrato a:
+
+a. Concurrir puntualmente a las clases durante los periodos de enseñanza para así recibir la formación profesional metódica y completa a que se refiere el presente Contrato, someterse a los reglamentos y normas establecidas por el respectivo Centro de Formación del ${institutoFormacion}, y poner toda diligencia y aplicación para lograr el mayor rendimiento en su formación.
+
+b. Acatar, durante la fase lectiva, el reglamento del estudiante correspondiente a su respectivo oferente de formación.
+
+c. Acatar durante la fase práctica el reglamento interno de trabajo y el reglamento del estudiante correspondiente a su respectivo oferente de formación.
+
+d. Concurrir puntualmente al lugar asignado por la Empresa para desarrollar su práctica en los ambientes laborales determinados para tal fin y durante el periodo establecido por el diseño curricular para el mismo, siempre relacionados con las actividades que se le encomiende y que guarde relación con la Formación, cumpliendo con las indicaciones que le señale la EMPRESA. En todo caso la intensidad horaria que debe cumplir el APRENDIZ durante la etapa práctica en la EMPRESA no podrá exceder de lo dispuesto por el artículo 3° de la Ley 2101 de 2021 sobre la aplicación gradual, y una jornada máxima de cuarenta y dos (42) horas a la semana.
+
+e. Proporcionar la información necesaria para que la EMPRESA lo afilie como APRENDIZ al sistema de seguridad social en las condiciones enunciadas en la cláusula SEXTA del presente contrato.`,
+                orden: 9
+            },
+            {
+                titulo: 'DÉCIMA. SUPERVISIÓN',
+                contenido: `La EMPRESA podrá supervisar al APRENDIZ en el respectivo Centro de Formación del ${institutoFormacion} (o en el Centro Educativo donde estuviere adelantando los estudios el aprendiz), la asistencia, como el rendimiento académico, a efectos de verificar y asegurar la real y efectiva utilización del tiempo en la etapa lectiva por parte de este. El ${institutoFormacion} supervisará al APRENDIZ en la EMPRESA para que sus actividades en cada periodo práctico correspondan al programa de la especialidad para la cual se está formando.`,
+                orden: 10
+            },
+            {
+                titulo: 'DÉCIMA PRIMERA - SUSPENSIÓN',
+                contenido: 'Para efectos de cualquier suspensión presentada en el desarrollo del contrato laboral especial de aprendizaje a término fijo aquí suscrito, se interpretará a la luz de los criterios taxativos estipulados en el artículo 51 del Código Sustantivo del Trabajo, para la etapa práctica.',
+                orden: 11
+            },
+            {
+                titulo: 'DÉCIMA SEGUNDA. - TERMINACIÓN',
+                contenido: `El presente contrato podrá darse por terminado por:
+ 
+a. En etapa lectiva por las causales estipuladas en el Acuerdo SENA 009 de 2024 (Reglamento del aprendiz). 
+b. En etapa productiva las causales estipuladas en los artículos 61 y 62 del Código Sustantivo del Trabajo.
+c. Por el vencimiento del plazo fijo pactado de duración del presente Contrato.  
+d. Las demás que consideren y pacten las partes por voluntad expresa en virtud del contrato, siempre y cuando no generen contradicción con su finalidad formativa ni con el Código Sustantivo del Trabajo.`,
+                orden: 12
+            },
+            {
+                titulo: 'DÉCIMA TERCERA. - DECLARACIÓN JURAMENTADA',
+                contenido: 'El APRENDIZ declara bajo la gravedad de juramento que no se encuentra ni ha estado vinculado con la EMPRESA o con otras EMPRESAS en una relación de aprendizaje. Así mismo, las partes declaran, que el aprendiz no se encuentra ni ha estado vinculado mediante una relación laboral con la EMPRESA.',
+                orden: 13
+            },
+            {
+                titulo: 'DÉCIMA CUARTA. - VIGENCIA',
+                contenido: `El presente contrato de aprendizaje rige a partir del día ${diaInicio} del Mes ${mesInicio} de ${añoInicio} y termina el del día ${diaFin} del Mes ${mesFin} de ${añoFin}, fecha prevista como terminación de la etapa productiva que se describe en la cláusula segunda de este contrato.`,
+                orden: 14
+            },
+            {
+                titulo: 'FIRMA',
+                contenido: `El presente contrato es firmado el día ${new Date().getDate()} del Mes ${new Date().toLocaleString('es', { month: 'long' }).toUpperCase()} del año ${new Date().getFullYear()} en la ciudad de CALI, ratificando que ha sido leído, pactado y consensuado, constituyéndose en manifestación de voluntad de las partes firmantes:`,
+                orden: 15
+            }
+        ];
+    }
+
     else if (tipoContrato === 'TERMINO_FIJO') {
         clausulasEspecificas = [
             {
@@ -95,50 +296,7 @@ PARÁGRAFO TERCERO: Las partes acuerdan que en los casos en que se le reconozcan
             }
         ];
     }
-    else if (tipoContrato === 'APRENDIZ') {
-        clausulasEspecificas = [
-            {
-                titulo: 'PRIMERA. OBJETO DEL CONTRATO DE APRENDIZAJE',
-                contenido: `El presente contrato tiene como objeto garantizar al APRENDIZ la formación profesional metódica y completa en la especialidad de ${cargo || 'la formación establecida'}, la cual se impartirá en su etapa lectiva en los ambientes de formación del CENTRO DE FORMACIÓN, y en su etapa práctica se desarrollará en los ambientes reales de trabajo de la EMPRESA PATROCINADORA en ${lugarLabores}.`,
-                orden: 1
-            },
-            {
-                titulo: 'SEGUNDA. DURACIÓN DEL CONTRATO DE APRENDIZAJE',
-                contenido: `El presente contrato tiene un término de duración comprendido entre el ${fechaInicio} fecha de iniciación del Contrato y el ${fechaFin} fecha de terminación de este. Esta duración deberá ajustarse al diseño curricular del programa de formación y no podrá exceder de TRES (3) años, de conformidad con lo dispuesto por el artículo 81 del Código Sustantivo del Trabajo.`,
-                orden: 2
-            },
-            {
-                titulo: 'TERCERA. MODALIDAD DE FORMACIÓN',
-                contenido: 'La formación será de tipo [dual / tradicional], compuesta por las siguientes fases: Fase lectiva y Fase práctica, según el cronograma establecido por la institución educativa.',
-                orden: 3
-            },
-            {
-                titulo: 'CUARTA. NATURALEZA JURÍDICA',
-                contenido: 'El presente contrato de aprendizaje tiene el carácter de laboral especial y a término fijo, conforme al artículo 81 del Código Sustantivo del Trabajo, modificado por el artículo 21 de la Ley 2466 de 2025. Su finalidad es facilitar la formación teórico-práctica del aprendiz en la ocupación, oficio o profesión, en concordancia con el programa de formación de la institución educativa.',
-                orden: 4
-            },
-            {
-                titulo: 'QUINTA. APOYO DE SOSTENIMIENTO MENSUAL',
-                contenido: 'Durante la vigencia del contrato, la EMPRESA PATROCINADORA se compromete a pagar al APRENDIZ un apoyo de sostenimiento mensual durante toda la formación, siendo equivalente al 75% del salario mínimo legal mensual vigente durante la etapa lectiva y al 100% durante la etapa práctica, o según lo establecido en la ley.',
-                orden: 5
-            },
-            {
-                titulo: 'SEXTA. SEGURIDAD SOCIAL',
-                contenido: 'LA EMPRESA garantizará la afiliación y pago mensual de la cotización del APRENDIZ al Sistema de Seguridad Social, conforme a la etapa del contrato: en fase lectiva: salud y riesgos laborales; en fase práctica: salud, pensión y riesgos laborales.',
-                orden: 6
-            },
-            {
-                titulo: 'SÉPTIMA. DERECHOS LABORALES EN LA ETAPA PRÁCTICA',
-                contenido: 'Durante la etapa práctica o durante toda la formación dual, EL APRENDIZ tendrá derecho al reconocimiento y pago a cargo de la EMPRESA PATROCINADORA de todas las prestaciones, auxilios y demás derechos propios del contrato laboral, incluyendo: prima de servicios, cesantías e intereses, vacaciones, dotación, auxilio de transporte, subsidio familiar, y pago de horas extra cuando aplique.',
-                orden: 7
-            },
-            {
-                titulo: 'OCTAVA. SUBORDINACIÓN JURÍDICA',
-                contenido: 'La subordinación estará referida exclusivamente a las actividades propias del aprendizaje, conforme al reglamento interno de trabajo de LA EMPRESA y al reglamento formativo del estudiante, por lo cual, se excluye de este contrato toda forma de subordinación laboral. Si las actividades que se desarrollan no están directamente relacionadas con el área de estudio, la práctica laboral mutará a relación laboral con sus implicaciones legales.',
-                orden: 8
-            }
-        ];
-    }
+
 
     // Combinar todas las cláusulas y ordenar
     const todasLasClausulas = [...clausulasEspecificas, ...clausulasComunes];
@@ -210,6 +368,21 @@ const ContratoModel = {
 
             const idContrato = result.insertId;
 
+            const datosAprendiz = {
+                especialidad: data.especialidad,
+                numero_grupo: data.numero_grupo,
+                centro_formacion: data.centro_formacion,
+                instituto_formacion: data.instituto_formacion,
+                otro_instituto: data.otro_instituto,
+                arl: data.arl,
+                salario: data.salario,
+                salarioMinimoAnual: data.salario_minimo_anual || 0,
+                fecha_fase_electiva_inicio: data.fecha_fase_electiva_inicio || data.fecha_inicio,
+                fecha_fase_electiva_fin: data.fecha_fase_electiva_fin || data.fecha_inicio,
+                fecha_fase_practica_inicio: data.fecha_fase_practica_inicio || data.fecha_inicio,
+                fecha_fase_practica_fin: data.fecha_fase_practica_fin || data.fecha_fin
+            };
+
             // 2. Insertar cláusulas según tipo de contrato
             const clausulas = obtenerClausulasPorTipo(
                 data.tipo_contrato,
@@ -217,7 +390,7 @@ const ContratoModel = {
                 data.fecha_fin,
                 data.termino_inicial,
                 data.cargo,
-                data.lugar_labores
+                datosAprendiz
             );
 
             for (const clausula of clausulas) {
@@ -371,8 +544,10 @@ const ContratoModel = {
             f.direccion,
             f.telefono,
             f.sexo,
+            f.correo_electronico,
             f.fecha_nacimiento,
             f.lugar_nacimiento,
+            f.lugar_expedicion,
             f.numero_cuenta_bancaria,
             f.tipo_cuenta,
             

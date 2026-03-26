@@ -111,6 +111,14 @@ const posicionSenaController = {
 
             const sede_ubicacion = departamento.nombre_departamento;
 
+            const salarioBase = primerItem.salario_base;
+            const aplicaAuxilioTransporte = primerItem.aplica_auxilio_transporte;
+            const contratoHasta = primerItem.contrato_hasta || null;
+
+            if (!salarioBase || salarioBase <= 0) {
+                return res.status(400).json({ message: 'El salario base es requerido y debe ser mayor a 0' });
+            }
+
             const codigosPosicion = await generarCodigosPosicionSecuenciales(
                 primerItem.id_cargo_base,
                 primerItem.id_departamento,
@@ -126,12 +134,12 @@ const posicionSenaController = {
                         codigo_posicion: codigosPosicion[i],
                         id_departamento: primerItem.id_departamento,
                         sede_ubicacion,
-                        salario_base: salarioConfigurado.salario_base,
-                        aplica_auxilio_transporte: aplicaAuxilioCalculado,
-                        bonificacion: salarioConfigurado.bonificacion || 0,
+                        salario_base: salarioBase,
+                        aplica_auxilio_transporte: aplicaAuxilioTransporte,
+                        bonificacion: 0,
                         fecha_creacion_posicion: new Date(),
                         fecha_eliminacion: null,
-                        contrato_hasta: null,
+                        contrato_hasta: contratoHasta,
                         activo: true,
                         id_funcionario: null
                     });
