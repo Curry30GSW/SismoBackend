@@ -415,7 +415,6 @@ const ContratoModel = {
         }
     },
 
-
     getAll: async (filtros = {}) => {
         let query = `
             SELECT 
@@ -512,8 +511,8 @@ const ContratoModel = {
         }
 
         // Ordenamiento
-        const orden = filtros.orden || 'DESC';
-        const ordenarPor = filtros.ordenar_por || 'c.fecha_creacion';
+        const orden = filtros.orden || 'ASC';
+        const ordenarPor = filtros.ordenar_por || 'c.id_contrato';
         query += ` ORDER BY ${ordenarPor} ${orden}`;
 
         // Paginación
@@ -529,10 +528,6 @@ const ContratoModel = {
         return rows;
     },
 
-
-    // =============================================
-    // READ
-    // =============================================
     getById: async (id) => {
         const [rows] = await pool.query(`
         SELECT 
@@ -623,7 +618,6 @@ const ContratoModel = {
         `, [contenido, idClausula]);
         return result;
     },
-
 
     getContratoActivoPorFuncionario: async (idFuncionario, idAnioLegal) => {
         const [rows] = await pool.query(`

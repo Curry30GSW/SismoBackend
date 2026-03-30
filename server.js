@@ -33,6 +33,7 @@ const cesantiasRoutes = require('./routes/Contratos/cesantiasRoutes');
 const epsRoutes = require('./routes/Contratos/epsRoutes');
 const pensionesRoutes = require('./routes/Contratos/pensionesRoutes');
 const nivelRiesgoRoutes = require('./routes/Contratos/nivelRiesgoRoutes');
+const prorrogaRoutes = require('./routes/Contratos/prorrogaRoutes');
 
 dotenv.config({
     path: `.env.${process.env.NODE_ENV || 'development'}`
@@ -89,6 +90,7 @@ app.use('/api/cesantias', cesantiasRoutes);
 app.use('/api/eps', epsRoutes);
 app.use('/api/pensiones', pensionesRoutes);
 app.use('/api/niveles-riesgo', nivelRiesgoRoutes);
+app.use('/api/prorrogas', prorrogaRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {

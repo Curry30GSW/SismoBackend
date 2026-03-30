@@ -108,16 +108,17 @@ const posicionSenaController = {
             const departamento = await DepartamentoModel.findById(primerItem.id_departamento);
             if (!departamento) return res.status(404).json({ message: 'Departamento no encontrado' });
 
-
             const sede_ubicacion = departamento.nombre_departamento;
 
+            // ✅ Usar el salario que viene del frontend
             const salarioBase = primerItem.salario_base;
-            const aplicaAuxilioTransporte = primerItem.aplica_auxilio_transporte;
-            const contratoHasta = primerItem.contrato_hasta || null;
-
             if (!salarioBase || salarioBase <= 0) {
                 return res.status(400).json({ message: 'El salario base es requerido y debe ser mayor a 0' });
             }
+
+            const aplicaAuxilioTransporte = primerItem.aplica_auxilio_transporte;
+            const contratoHasta = primerItem.contrato_hasta || null;
+            const idFuncionario = primerItem.id_funcionario || null;  // ✅ Capturar id_funcionario
 
             const codigosPosicion = await generarCodigosPosicionSecuenciales(
                 primerItem.id_cargo_base,
@@ -134,14 +135,14 @@ const posicionSenaController = {
                         codigo_posicion: codigosPosicion[i],
                         id_departamento: primerItem.id_departamento,
                         sede_ubicacion,
-                        salario_base: salarioBase,
+                        salario_base: salarioBase,  // ✅ Usar salario recibido
                         aplica_auxilio_transporte: aplicaAuxilioTransporte,
                         bonificacion: 0,
                         fecha_creacion_posicion: new Date(),
                         fecha_eliminacion: null,
                         contrato_hasta: contratoHasta,
                         activo: true,
-                        id_funcionario: null
+                        id_funcionario: idFuncionario  // ✅ Pasar id_funcionario al modelo
                     });
 
                     resultados.push({

@@ -66,6 +66,9 @@ const PosicionSenaModel = {
                 ps.contrato_hasta,
                 ps.activo,
                 ps.id_funcionario,
+                ps.salario_base,
+                ps.aplica_auxilio_transporte,
+                ps.bonificacion,
                 
                 -- Datos del cargo
                 cb.nombre_cargo,
@@ -81,10 +84,7 @@ const PosicionSenaModel = {
                 al.salario_minimo_legal,
                 al.auxilio_transporte,
                 
-                -- Datos del histórico de salarios
-                hsc.salario_base,
-                hsc.bonificacion,
-                hsc.aplica_auxilio_transporte,
+
                 
                 -- Datos del funcionario (si existe)
                 f.nombres,
