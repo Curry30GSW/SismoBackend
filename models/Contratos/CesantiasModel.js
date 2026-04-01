@@ -7,17 +7,15 @@ const CesantiasModel = {
                 codigo_cesantia,
                 nit,
                 nombre_cesantia,
-                nombre_aporte,
-                activo
-            ) VALUES (?, ?, ?, ?, ?)
+                nombre_aporte
+            ) VALUES (?, ?, ?, ?)
         `;
 
         const values = [
             data.codigo_cesantia,
             data.nit,
             data.nombre_cesantia,
-            data.nombre_aporte,
-            data.activo !== undefined ? data.activo : true
+            data.nombre_aporte
         ];
 
         const [result] = await pool.query(query, values);
@@ -53,7 +51,6 @@ const CesantiasModel = {
                 nit = ?,
                 nombre_cesantia = ?,
                 nombre_aporte = ?,
-                activo = ?
             WHERE id_cesantias = ?
         `;
 
@@ -62,7 +59,6 @@ const CesantiasModel = {
             data.nit,
             data.nombre_cesantia,
             data.nombre_aporte,
-            data.activo,
             id
         ];
 

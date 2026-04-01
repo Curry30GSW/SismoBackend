@@ -3,7 +3,7 @@ const CajaCompensacionModel = require('../../models/Contratos/CajaCompensacionMo
 const cajaCompensacionController = {
     create: async (req, res) => {
         try {
-            const { codigo_caja, nombre_caja, activo } = req.body;
+            const { codigo_caja, nombre_caja } = req.body;
 
             if (!codigo_caja) {
                 return res.status(400).json({
@@ -27,7 +27,7 @@ const cajaCompensacionController = {
                 });
             }
 
-            const result = await CajaCompensacionModel.create({ codigo_caja, nombre_caja, activo });
+            const result = await CajaCompensacionModel.create({ codigo_caja, nombre_caja });
 
             res.status(201).json({
                 success: true,
@@ -120,7 +120,7 @@ const cajaCompensacionController = {
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { codigo_caja, nombre_caja, activo } = req.body;
+            const { codigo_caja, nombre_caja } = req.body;
 
             const cajaExistente = await CajaCompensacionModel.getById(id);
             if (!cajaExistente) {
@@ -141,7 +141,7 @@ const cajaCompensacionController = {
                 }
             }
 
-            await CajaCompensacionModel.update(id, { codigo_caja, nombre_caja, activo });
+            await CajaCompensacionModel.update(id, { codigo_caja, nombre_caja });
 
             res.json({
                 success: true,

@@ -1,7 +1,39 @@
 const ProrrogaModel = require('../../models/Contratos/ProrrogaModel');
 const ContratoModel = require('../../models/Contratos/ContratoModel');
 
+const pool = require('../../config/ConectDb');
+
+
 const prorrogaController = {
+
+    //FUNCION PARA GENERAR CODIGO DE PRORROGA UNICO Y SECUENCIAL
+    generarCodigoProrroga: async () => {
+        // Buscar el último código usado en TODAS las prórrogas
+        const [result] = await pool.query(`
+            SELECT codigo_prorroga 
+            FROM prorrogas_contrato 
+            WHERE codigo_prorroga LIKE 'PC-%'
+            ORDER BY id_prorroga DESC 
+            LIMIT 1
+        `);
+
+        let ultimoNumero = 0;
+
+        if (result.length > 0 && result[0].codigo_prorroga) {
+            // Extraer el número del último código (ej: PC-001 -> 1)
+            const partes = result[0].codigo_prorroga.split('-');
+            if (partes.length >= 2) {
+                ultimoNumero = parseInt(partes[1]) || 0;
+            }
+        }
+
+        // Generar el nuevo número (incrementar en 1)
+        const nuevoNumero = (ultimoNumero + 1).toString().padStart(3, '0');
+
+        return `PC-${nuevoNumero}`;
+    },
+
+
     // Crear nueva prórroga
     create: async (req, res) => {
         try {
@@ -34,6 +66,9 @@ const prorrogaController = {
                 });
             }
 
+            // 🔥 Generar el código de prórroga
+            const codigoProrroga = await prorrogaController.generarCodigoProrroga();
+
             // Calcular nueva fecha de fin
             const fechaFinAnterior = new Date(contrato.fecha_fin);
             const fechaFinNueva = new Date(fechaFinAnterior);
@@ -42,6 +77,7 @@ const prorrogaController = {
             // Crear la prórroga
             const result = await ProrrogaModel.create({
                 id_contrato: id,
+                codigo_prorroga: codigoProrroga,
                 fecha_inicio: new Date(),
                 fecha_fin_anterior: contrato.fecha_fin,
                 fecha_fin_nueva: fechaFinNueva,
@@ -54,7 +90,7 @@ const prorrogaController = {
 
             res.json({
                 success: true,
-                message: `Prórroga #${result.numero_prorroga} creada exitosamente. Nueva fecha de fin: ${fechaFinNueva.toISOString().split('T')[0]}`,
+                message: `Prórroga ${codigoProrroga} creada exitosamente. Nueva fecha de fin: ${fechaFinNueva.toISOString().split('T')[0]}`,
                 data: {
                     prorroga: result,
                     contrato: contratoActualizado

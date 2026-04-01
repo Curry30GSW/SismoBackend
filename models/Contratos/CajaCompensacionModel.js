@@ -5,15 +5,13 @@ const CajaCompensacionModel = {
         const query = `
             INSERT INTO caja_compensacion (
                 codigo_caja,
-                nombre_caja,
-                activo
-            ) VALUES (?, ?, ?)
+                nombre_caja
+            ) VALUES (?, ?, )
         `;
 
         const values = [
             data.codigo_caja,
-            data.nombre_caja,
-            data.activo !== undefined ? data.activo : true
+            data.nombre_caja
         ];
 
         const [result] = await pool.query(query, values);
@@ -46,15 +44,13 @@ const CajaCompensacionModel = {
         const query = `
             UPDATE caja_compensacion SET
                 codigo_caja = ?,
-                nombre_caja = ?,
-                activo = ?
+                nombre_caja = ?
             WHERE id_caja = ?
         `;
 
         const values = [
             data.codigo_caja,
             data.nombre_caja,
-            data.activo,
             id
         ];
 

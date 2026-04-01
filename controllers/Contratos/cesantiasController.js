@@ -3,7 +3,7 @@ const CesantiasModel = require('../../models/Contratos/CesantiasModel');
 const cesantiasController = {
     create: async (req, res) => {
         try {
-            const { codigo_cesantia, nit, nombre_cesantia, nombre_aporte, activo } = req.body;
+            const { codigo_cesantia, nit, nombre_cesantia, nombre_aporte } = req.body;
 
             if (!codigo_cesantia) {
                 return res.status(400).json({
@@ -32,8 +32,7 @@ const cesantiasController = {
                 codigo_cesantia,
                 nit,
                 nombre_cesantia,
-                nombre_aporte,
-                activo
+                nombre_aporte
             });
 
             res.status(201).json({
@@ -56,10 +55,7 @@ const cesantiasController = {
     // =============================================
     getAll: async (req, res) => {
         try {
-            const { activo } = req.query;
-            const filterActivo = activo !== undefined ? activo === 'true' : true;
-
-            const cesantias = await CesantiasModel.getAll(filterActivo);
+            const cesantias = await CesantiasModel.getAll();
 
             res.json({
                 success: true,
@@ -136,7 +132,7 @@ const cesantiasController = {
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { codigo_cesantia, nit, nombre_cesantia, nombre_aporte, activo } = req.body;
+            const { codigo_cesantia, nit, nombre_cesantia, nombre_aporte } = req.body;
 
             const cesantiaExistente = await CesantiasModel.getById(id);
             if (!cesantiaExistente) {
@@ -161,8 +157,7 @@ const cesantiasController = {
                 codigo_cesantia,
                 nit,
                 nombre_cesantia,
-                nombre_aporte,
-                activo
+                nombre_aporte
             });
 
             res.json({

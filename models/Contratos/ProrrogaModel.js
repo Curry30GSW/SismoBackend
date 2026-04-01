@@ -25,6 +25,7 @@ const ProrrogaModel = {
             const query = `
             INSERT INTO prorrogas_contrato (
                 id_contrato,
+                codigo_prorroga,      
                 numero_prorroga,
                 fecha_inicio,
                 fecha_fin_anterior,
@@ -32,17 +33,18 @@ const ProrrogaModel = {
                 dias_prorrogados,
                 estado,
                 usuario_creacion
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
             const values = [
                 data.id_contrato,
+                data.codigo_prorroga,
                 numeroProrroga,
                 data.fecha_inicio,
                 data.fecha_fin_anterior,
                 data.fecha_fin_nueva,
                 data.dias_prorrogados,
-                'ACTIVA',  // ← La nueva prórroga se crea como ACTIVA
+                'ACTIVA',
                 data.usuario_creacion || 'SISTEMA'
             ];
 
@@ -58,8 +60,10 @@ const ProrrogaModel = {
         `, [data.fecha_fin_nueva, data.id_contrato]);
 
             await connection.commit();
+
             return {
                 id_prorroga: result.insertId,
+                codigo_prorroga: data.codigo_prorroga,  // ← NUEVO
                 numero_prorroga: numeroProrroga
             };
 
