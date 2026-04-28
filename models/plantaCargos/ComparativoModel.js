@@ -40,7 +40,7 @@ const ComparativoModel = {
                 ON cb.id_cargo_base = hsc2.id_cargo_base 
                 AND hsc2.id_anio_legal = ? 
                 AND hsc2.activo = true
-            WHERE cb.activo = true
+            WHERE cb.activo = true and id_tipo_planta = 1
             GROUP BY cb.id_cargo_base, cb.nombre_cargo, cb.es_director_agencia
             ORDER BY cb.nombre_cargo
         `, [auxilio1, auxilio2, idAnio1, idAnio1, idAnio2, idAnio2]);
@@ -126,7 +126,7 @@ const ComparativoModel = {
             ON cb.id_cargo_base = hsc.id_cargo_base 
             AND hsc.id_anio_legal = ? 
             AND hsc.activo = true
-        WHERE cb.activo = true
+        WHERE cb.activo = true AND id_tipo_planta = 1
         GROUP BY cb.id_cargo_base, cb.nombre_cargo, cb.codigo_cargo, cb.es_director_agencia
         ORDER BY cb.nombre_cargo
     `, [auxilioTransporte, auxilioTransporte, auxilioTransporte, idAnioLegal, idAnioLegal]);

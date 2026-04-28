@@ -8,6 +8,7 @@ router.get('/documento/:tipo/:numero', funcionarioController.getByDocumento);
 
 
 router.get('/', funcionarioController.getAll);
+router.get('/activos', funcionarioController.getAllActivosOnlyFuncionarios);
 router.post('/', funcionarioController.create);
 router.get('/:id', funcionarioController.getById);
 router.get('/:id/historial', funcionarioController.getHistorialPosiciones);

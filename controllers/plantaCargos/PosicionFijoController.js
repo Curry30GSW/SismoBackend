@@ -272,7 +272,6 @@ const posicionFijoController = {
     delete: async (req, res) => {
         try {
             const { id } = req.params;
-            const { motivo } = req.body;
 
             const posicion = await PosicionFijoModel.getById(id);
             if (!posicion) {
@@ -423,7 +422,54 @@ const posicionFijoController = {
             console.error('Error en copyFromYear:', error);
             res.status(500).json({ message: error.message });
         }
+    },
+
+    getPosicionFuncionario: async (req, res) => {
+        try {
+            const { idFuncionario } = req.params;
+
+            const posicion = await PosicionFijoModel.getPosicionByFuncionario(idFuncionario);
+
+            if (!posicion) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'El funcionario no tiene una posición activa'
+                });
+            }
+
+            res.json({
+                success: true,
+                data: posicion
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
+
+    verificarPosicionActiva: async (req, res) => {
+        try {
+            const { idFuncionario } = req.params;
+
+            const tienePosicion = await PosicionFijoModel.tienePosicionActiva(idFuncionario);
+
+            res.json({
+                success: true,
+                data: {
+                    id_funcionario: idFuncionario,
+                    tiene_posicion_activa: tienePosicion
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
     }
+
 };
 
 module.exports = posicionFijoController;

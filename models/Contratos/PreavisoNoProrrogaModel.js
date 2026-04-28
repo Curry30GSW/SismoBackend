@@ -6,16 +6,18 @@ const PreavisoNoProrrogaModel = {
         const query = `
             INSERT INTO preavisos_no_prorroga (
                 id_contrato,
+                codigo_preaviso, 
                 fecha_preaviso,
                 fecha_notificacion,
                 dias_antelacion,
                 estado,
                 usuario_creacion
-            ) VALUES (?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
         const values = [
             data.id_contrato,
+            data.codigo_preaviso,
             data.fecha_preaviso,
             data.fecha_notificacion,
             data.dias_antelacion,

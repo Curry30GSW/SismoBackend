@@ -10,8 +10,8 @@ const PosicionCargoModel = require('../../models/plantaCargos/PosicionCargoModel
 const CargoBaseModel = require('../../models/plantaCargos/CargoBaseModel');
 const pool = require('../../config/ConectDb');
 
+
 async function generarNumeroContrato(tipoContrato) {
-    // Definir el prefijo según el tipo de contrato
     let prefijo;
     switch (tipoContrato) {
         case 'TERMINO_FIJO':
@@ -23,11 +23,13 @@ async function generarNumeroContrato(tipoContrato) {
         case 'APRENDIZ':
             prefijo = 'CMA';
             break;
+        case 'MEDIO_TIEMPO':
+            prefijo = 'CMT';
+            break;
         default:
-            prefijo = 'CTR'; // Contrato regular
+            prefijo = 'CSC'; // Contrato Sin Clasificar (por si no se reconoce el tipo)
     }
 
-    // Buscar el último número usado para este tipo de contrato
     const [result] = await pool.query(`
         SELECT numero_contrato 
         FROM contratos 
@@ -52,11 +54,8 @@ async function generarNumeroContrato(tipoContrato) {
     return `${prefijo}-${nuevoNumero}`;
 }
 
-
 const contratoController = {
-    // =============================================
     // DATOS PARA FORMULARIOS
-    // =============================================
     getFormData: async (req, res) => {
         try {
             // Obtener datos de todas las tablas necesarias
@@ -94,7 +93,6 @@ const contratoController = {
         }
     },
 
-
     getNivelesRiesgo: async (req, res) => {
         try {
             const { id_arl } = req.params;
@@ -111,9 +109,7 @@ const contratoController = {
         }
     },
 
-    // =============================================
     // BUSCAR FUNCIONARIO (para autocompletar)
-    // =============================================
     buscarFuncionario: async (req, res) => {
         try {
             const { documento } = req.params;
@@ -252,9 +248,7 @@ const contratoController = {
         }
     },
 
-    // =============================================
     // CRUD CONTRATOS
-    // =============================================
     create: async (req, res) => {
         try {
             const data = req.body;
@@ -416,9 +410,7 @@ const contratoController = {
         }
     },
 
-    // =============================================
     // GESTIÓN DE CLÁUSULAS
-    // =============================================
     updateClausula: async (req, res) => {
         try {
             const { id } = req.params; // id_clausula
@@ -447,9 +439,7 @@ const contratoController = {
         }
     },
 
-    // =============================================
     // ACCIONES SOBRE EL CONTRATO
-    // =============================================
     finalizar: async (req, res) => {
         try {
             const { id } = req.params;
@@ -543,6 +533,67 @@ const contratoController = {
 
         } catch (error) {
             console.error('Error en delete contrato:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
+
+    cambiarAIndefinido: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { id_posicion, usuario_creacion } = req.body;
+
+            // Validaciones
+            if (!id_posicion) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La posición es requerida para el contrato indefinido'
+                });
+            }
+
+            const contratoExistente = await ContratoModel.getById(id);
+            if (!contratoExistente) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contrato no encontrado'
+                });
+            }
+
+            if (contratoExistente.tipo_contrato !== 'TERMINO_FIJO') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Solo se pueden cambiar contratos a término fijo'
+                });
+            }
+
+            if (contratoExistente.estado !== 'ACTIVO' && contratoExistente.estado !== 'PRORROGADO') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Solo se pueden cambiar contratos activos o prorrogados'
+                });
+            }
+
+            // Generar el número en el controlador
+            const nuevoNumeroContrato = await generarNumeroContrato('INDEFINIDO');
+
+            // Pasar el número generado al modelo
+            const resultado = await ContratoModel.cambiarModalidadAIndefinido(
+                id,
+                id_posicion,
+                usuario_creacion || 'SISTEMA',
+                nuevoNumeroContrato
+            );
+
+            res.json({
+                success: true,
+                message: 'Contrato cambiado a indefinido exitosamente',
+                data: resultado
+            });
+
+        } catch (error) {
+            console.error('Error en cambiarAIndefinido:', error);
             res.status(500).json({
                 success: false,
                 message: error.message

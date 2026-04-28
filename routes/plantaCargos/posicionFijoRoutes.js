@@ -28,4 +28,7 @@ router.post('/:id/trasladar-cargo', posicionFijoController.trasladarCargo);
 // =============================================
 router.post('/copy/:id_anio_origen/:id_anio_destino', posicionFijoController.copyFromYear);
 
+router.get('/funcionario/:idFuncionario/posicion-activa', posicionFijoController.getPosicionFuncionario);
+router.get('/funcionario/:idFuncionario/verificar-posicion', posicionFijoController.verificarPosicionActiva);
+
 module.exports = router;

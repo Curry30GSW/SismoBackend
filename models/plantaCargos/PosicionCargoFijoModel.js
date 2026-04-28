@@ -53,7 +53,7 @@ const PosicionFijoModel = {
     getAllByAnio: async (idAnioLegal, filtros = {}) => {
         let query = `
             SELECT 
-                pf.id_posicones_fijo as id_posicion,
+                pf.id_posicion_fijo,
                 pf.id_cargo_base,
                 pf.id_anio_legal,
                 pf.codigo_posicion,
@@ -142,7 +142,7 @@ const PosicionFijoModel = {
             INNER JOIN cargos_base cb ON pf.id_cargo_base = cb.id_cargo_base
             INNER JOIN departamentos d ON pf.id_departamento = d.id_departamento
             INNER JOIN anios_legales al ON pf.id_anio_legal = al.id_anio_legal
-            WHERE pf.id_posicones_fijo = ?
+            WHERE pf.id_posicion_fijo = ?
         `, [id]);
         return rows[0];
     },
@@ -160,9 +160,9 @@ const PosicionFijoModel = {
             SELECT 
                 cb.id_cargo_base,
                 cb.nombre_cargo,
-                COUNT(pf.id_posicones_fijo) as total_posiciones,
+                COUNT(pf.id_posicion_fijo) as total_posiciones,
                 COUNT(pf.id_funcionario) as posiciones_ocupadas,
-                COUNT(pf.id_posicones_fijo) - COUNT(pf.id_funcionario) as disponibilidad
+                COUNT(pf.id_posicion_fijo) - COUNT(pf.id_funcionario) as disponibilidad
             FROM cargos_base cb
             LEFT JOIN posiciones_cargo_fijo pf 
                 ON cb.id_cargo_base = pf.id_cargo_base 
@@ -187,7 +187,7 @@ const PosicionFijoModel = {
                 aplica_auxilio_transporte = ?,
                 bonificacion = ?,
                 activo = ?
-            WHERE id_posicones_fijo = ?
+            WHERE id_posicion_fijo = ?
         `;
 
         const values = [
@@ -212,7 +212,7 @@ const PosicionFijoModel = {
             UPDATE posiciones_cargo_fijo 
             SET activo = false, 
                 fecha_eliminacion_posicion = ? 
-            WHERE id_posicones_fijo = ?
+            WHERE id_posicion_fijo = ?
         `, [fechaEliminacion, id]);
         return result;
     },
@@ -225,9 +225,8 @@ const PosicionFijoModel = {
         try {
             await connection.beginTransaction();
 
-            // Verificar que la posición existe
             const [posicion] = await connection.query(
-                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicones_fijo = ? AND activo = true',
+                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicion_fijo = ? AND activo = true',
                 [idPosicion]
             );
 
@@ -237,12 +236,10 @@ const PosicionFijoModel = {
 
             const idAnioLegal = posicion[0].id_anio_legal;
 
-            // Verificar que la posición no tenga ya un funcionario
             if (posicion[0].id_funcionario) {
                 throw new Error('La posición ya tiene un funcionario asignado');
             }
 
-            // Verificar que el funcionario existe
             const [funcionario] = await connection.query(
                 'SELECT * FROM funcionarios WHERE id_funcionario = ? AND activo = true',
                 [idFuncionario]
@@ -252,7 +249,6 @@ const PosicionFijoModel = {
                 throw new Error('Funcionario no encontrado o inactivo');
             }
 
-            // Verificar si el funcionario ya tiene otra posición FIJO en el mismo año
             const [posicionActual] = await connection.query(
                 `SELECT pf.*, cb.nombre_cargo 
                  FROM posiciones_cargo_fijo pf
@@ -270,9 +266,8 @@ const PosicionFijoModel = {
                 );
             }
 
-            // Asignar funcionario
             await connection.query(
-                'UPDATE posiciones_cargo_fijo SET id_funcionario = ?, encargado = ? WHERE id_posicones_fijo = ?',
+                'UPDATE posiciones_cargo_fijo SET id_funcionario = ?, encargado = ? WHERE id_posicion_fijo = ?',
                 [idFuncionario, esEncargado ? 1 : 0, idPosicion]
             );
 
@@ -302,7 +297,7 @@ const PosicionFijoModel = {
             await connection.beginTransaction();
 
             const [posicion] = await connection.query(
-                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicones_fijo = ? AND activo = true',
+                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicion_fijo = ? AND activo = true',
                 [idPosicion]
             );
 
@@ -317,7 +312,7 @@ const PosicionFijoModel = {
             }
 
             await connection.query(
-                'UPDATE posiciones_cargo_fijo SET id_funcionario = NULL, encargado = 0 WHERE id_posicones_fijo = ?',
+                'UPDATE posiciones_cargo_fijo SET id_funcionario = NULL, encargado = 0 WHERE id_posicion_fijo = ?',
                 [idPosicion]
             );
 
@@ -345,7 +340,7 @@ const PosicionFijoModel = {
             await connection.beginTransaction();
 
             const [posicion] = await connection.query(
-                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicones_fijo = ? AND activo = true',
+                'SELECT * FROM posiciones_cargo_fijo WHERE id_posicion_fijo = ? AND activo = true',
                 [idPosicion]
             );
 
@@ -363,7 +358,7 @@ const PosicionFijoModel = {
             }
 
             await connection.query(
-                'UPDATE posiciones_cargo_fijo SET id_departamento = ?, sede_ubicacion = ? WHERE id_posicones_fijo = ?',
+                'UPDATE posiciones_cargo_fijo SET id_departamento = ?, sede_ubicacion = ? WHERE id_posicion_fijo = ?',
                 [idNuevoDepartamento, departamento[0].nombre_departamento, idPosicion]
             );
 
@@ -435,6 +430,54 @@ const PosicionFijoModel = {
             throw error;
         } finally {
             connection.release();
+        }
+    },
+
+    // =============================================
+    // FUNCIONARIOS - POSICIÓN ACTIVA
+    // =============================================
+
+    getPosicionByFuncionario: async (idFuncionario) => {
+        try {
+            const [rows] = await pool.query(`
+                SELECT 
+                    pf.id_posicion_fijo as id_posicion,
+                    pf.id_cargo_base,
+                    pf.id_anio_legal,
+                    pf.codigo_posicion,
+                    pf.id_departamento,
+                    pf.sede_ubicacion,
+                    pf.salario_base,
+                    pf.aplica_auxilio_transporte,
+                    pf.bonificacion,
+                    pf.fecha_creacion_posicion,
+                    pf.activo,
+                    pf.encargado,
+                    pf.id_funcionario
+                FROM posiciones_cargo_fijo pf
+                WHERE pf.id_funcionario = ? 
+                  AND pf.activo = true
+                LIMIT 1
+            `, [idFuncionario]);
+            return rows[0] || null;
+        } catch (error) {
+            console.error('Error en getPosicionByFuncionario:', error);
+            throw error;
+        }
+    },
+
+    tienePosicionActiva: async (idFuncionario) => {
+        try {
+            const [rows] = await pool.query(`
+                SELECT COUNT(*) as total
+                FROM posiciones_cargo_fijo pf
+                WHERE pf.id_funcionario = ? 
+                  AND pf.activo = true
+            `, [idFuncionario]);
+            return rows[0].total > 0;
+        } catch (error) {
+            console.error('Error en tienePosicionActiva:', error);
+            throw error;
         }
     }
 };

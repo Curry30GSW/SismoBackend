@@ -17,6 +17,7 @@ router.get('/buscar-funcionario/:documento', contratoController.buscarFuncionari
 // CRUD CONTRATOS
 // =============================================
 router.post('/', contratoController.create);
+router.post('/cambiar-indefinido/:id', contratoController.cambiarAIndefinido);
 router.get('/', contratoController.getAll);
 router.get('/funcionario/:id_funcionario', contratoController.getByFuncionario);
 router.get('/:id', contratoController.getById);

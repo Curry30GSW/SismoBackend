@@ -92,12 +92,16 @@ const posicionCargoController = {
             // 🔥 PASO 2: Crear las posiciones con los códigos pre-generados
             for (let i = 0; i < posiciones.length; i++) {
                 try {
+
+                    const extension = posiciones[i].extension !== undefined ? posiciones[i].extension : 0;
+
                     const result = await PosicionCargoModel.create({
                         id_cargo_base: primerItem.id_cargo_base,
                         id_anio_legal: primerItem.id_anio_legal,
                         codigo_posicion: codigosPosicion[i], // Usar código pre-generado
                         id_departamento: primerItem.id_departamento,
                         sede_ubicacion,
+                        extension,
                         salario_base: salarioConfigurado.salario_base,
                         aplica_auxilio_transporte: aplicaAuxilioCalculado,
                         bonificacion: salarioConfigurado.bonificacion || 0,
@@ -486,7 +490,26 @@ const posicionCargoController = {
         }
     },
 
+    reordenarPosiciones: async (req, res) => {
+        try {
+            const { id_anio_legal } = req.params;
 
+            const result = await PosicionCargoModel.reordenarPosicionesPorAnio(id_anio_legal);
+
+            res.json({
+                success: true,
+                message: `Posiciones reordenadas exitosamente para el año ${id_anio_legal}`,
+                data: result
+            });
+
+        } catch (error) {
+            console.error('Error en reordenarPosiciones:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
 
     // OBTENER FUNCIONARIO POR DOCUMENTO
     getByDocumento: async (req, res) => {
@@ -736,6 +759,55 @@ const posicionCargoController = {
             res.status(500).json({
                 success: false,
                 message: error.message || 'Error al trasladar funcionario'
+            });
+        }
+    },
+
+    cambiarCargoBase: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { id_cargo_base, motivo } = req.body;
+
+            if (!id_cargo_base) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El ID del nuevo cargo base es requerido'
+                });
+            }
+
+            // Obtener el cargo base anterior para el registro
+            const posicionActual = await PosicionCargoModel.getById(id);
+            if (!posicionActual) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Posición no encontrada'
+                });
+            }
+
+            const cargoAnterior = await CargoBaseModel.getById(posicionActual.id_cargo_base);
+
+            const result = await PosicionCargoModel.cambiarCargoBase(id, id_cargo_base);
+
+            // Registrar movimiento - AHORA result tiene id_anio_legal
+            await MovimientoCargoModel.create({
+                id_posicion: id,
+                tipo_movimiento: 'CAMBIO_CATEGORIA',
+                id_anio_legal: result.id_anio_legal, // ← AHORA SÍ TIENE VALOR
+                motivo: motivo || `Cambio de categoría: ${cargoAnterior?.nombre_cargo || 'N/A'} → ${result.id_cargo_base_nuevo}`,
+                usuario_sistema: req.user?.email || 'SISTEMA'
+            });
+
+            res.json({
+                success: true,
+                message: 'Categoría del director actualizada exitosamente',
+                data: result
+            });
+
+        } catch (error) {
+            console.error('Error en cambiarCargoBase:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
             });
         }
     },

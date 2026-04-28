@@ -327,6 +327,26 @@ const funcionarioController = {
         }
     },
 
+    getAllActivosOnlyFuncionarios: async (req, res) => {
+        try {
+            const funcionarios = await FuncionarioModel.getAllActivosOnlyFuncionarios();
+
+            res.status(200).json({
+                ok: true,
+                data: funcionarios
+            });
+
+        } catch (error) {
+            console.error('Error al obtener funcionarios activos:', error);
+
+            res.status(500).json({
+                ok: false,
+                message: 'Error al obtener funcionarios activos',
+                error: error.message
+            });
+        }
+    }
+
 };
 
 module.exports = funcionarioController;

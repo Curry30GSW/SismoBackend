@@ -7,6 +7,7 @@ const posicionCargoController = require('../../controllers/plantaCargos/posicion
 // =============================================
 router.post('/:id/trasladar-cargo', posicionCargoController.trasladarCargo);
 router.post('/:id/trasladar-funcionario', posicionCargoController.trasladarFuncionario);
+router.post('/reordenar/:id_anio_legal', posicionCargoController.reordenarPosiciones);
 router.get('/disponibilidad/:id_anio_legal', posicionCargoController.getDisponibilidad);
 
 // =============================================
@@ -15,6 +16,7 @@ router.get('/disponibilidad/:id_anio_legal', posicionCargoController.getDisponib
 router.post('/', posicionCargoController.create);
 router.get('/:id', posicionCargoController.getById);
 router.put('/:id', posicionCargoController.update);
+router.put('/:id/cambiar-categoria', posicionCargoController.cambiarCargoBase);
 router.delete('/:id', posicionCargoController.delete);
 
 router.post('/:id/desasignar', posicionCargoController.desasignarFuncionario);

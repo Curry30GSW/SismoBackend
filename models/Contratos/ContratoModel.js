@@ -1,9 +1,9 @@
 const pool = require('../../config/ConectDb');
+const PosicionCargoModel = require('../plantaCargos/PosicionCargoModel');
 
 
 function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}) {
 
-    // Cláusulas comunes a todos los contratos
     const clausulasComunes = [
         {
             titulo: 'PRIMERA. OBJETO DEL CONTRATO',
@@ -28,7 +28,9 @@ PARÁGRAFO TERCERO: Las partes acuerdan que en los casos en que se le reconozcan
         },
         {
             titulo: 'QUINTA. JORNADA DE TRABAJO',
-            contenido: `EL TRABAJADOR se obliga a laborar la jornada máxima legal, salvo acuerdo especial, cumpliendo con los turnos y horarios que señale EL EMPLEADOR, pudiendo hacer éste ajustes o cambios de horario cuando lo estime conveniente, sin que ello se considere como una desmejora en las condiciones laborales del TRABAJADOR. Por el acuerdo expreso o tácito de las partes, podrán repartirse las horas de la jornada ordinaria con base en lo dispuesto por el Artículo 164 del Código Sustantivo de Trabajo modificado por el artículo 23 de la Ley 50 de 1990, teniendo en cuenta que los tiempos de descanso entre las secciones de la jornada no se computan dentro de la misma, según el artículo 167 ibidem.`,
+            contenido: tipoContrato === 'MEDIO_TIEMPO'
+                ? `EL TRABAJADOR se obliga a laborar media jornada máxima legal, salvo acuerdo especial, cumpliendo con los turnos y horarios que señale el EMPLEADOR, El TRABAJADOR se obliga a laborar una jornada de medio tiempo, distribuidas de la siguiente manera: de lunes a viernes, el TRABAJADOR prestará sus servicios durante 4 horas en la mañana, desde las 8:00 a.m. hasta las 12:00 p.m. Asimismo, los sábados se desempeñará durante 2 horas en la jornada de 8:00 a.m. a 10:00 a.m. lo cual no implica que el empleador pueda hacer ajustes o cambios de horario respetando la media jornada laboral es decir las 21 horas semanales en la jornada ordinaria diaria de 6:00 a.m. a 10:00 p.m. cuando lo estime conveniente, sin que ello se considere como una desmejora en las condiciones laborales del TRABAJADOR, podrán repartirse las horas de la media jornada ordinaria con base en lo dispuesto por el Artículo 164 del código Sustantivo de Trabajo modificado por el artículo 23 de la Ley 50 de 1990, teniendo en cuenta que los tiempos de descanso entre las secciones de la jornada no se computan dentro de la misma, según el artículo 167 ibidem`
+                : `EL TRABAJADOR se obliga a laborar la jornada máxima legal, salvo acuerdo especial, cumpliendo con los turnos y horarios que señale EL EMPLEADOR, pudiendo hacer éste ajustes o cambios de horario cuando lo estime conveniente, sin que ello se considere como una desmejora en las condiciones laborales del TRABAJADOR. Por el acuerdo expreso o tácito de las partes, podrán repartirse las horas de la jornada ordinaria con base en lo dispuesto por el Artículo 164 del Código Sustantivo de Trabajo modificado por el artículo 23 de la Ley 50 de 1990, teniendo en cuenta que los tiempos de descanso entre las secciones de la jornada no se computan dentro de la misma, según el artículo 167 ibidem.`,
             orden: 5
         },
         {
@@ -75,7 +77,6 @@ PARÁGRAFO TERCERO: Las partes acuerdan que en los casos en que se le reconozcan
         }
     ];
 
-    // Cláusulas específicas por tipo de contrato
     let clausulasEspecificas = [];
 
     if (tipoContrato === 'INDEFINIDO') {
@@ -297,6 +298,20 @@ d. Las demás que consideren y pacten las partes por voluntad expresa en virtud 
         ];
     }
 
+    if (datosAprendiz?.esMedioTiempo === true) {
+        // Encontrar el índice de la cláusula QUINTA
+        const quintaIndex = clausulasComunes.findIndex(c => c.titulo === 'QUINTA. JORNADA DE TRABAJO');
+
+        if (quintaIndex !== -1) {
+            // Reemplazar con la cláusula de medio tiempo
+            clausulasComunes[quintaIndex] = {
+                titulo: 'QUINTA. JORNADA DE TRABAJO',
+                contenido: `EL TRABAJADOR se obliga a laborar media jornada máxima legal, salvo acuerdo especial, cumpliendo con los turnos y horarios que señale el EMPLEADOR. El TRABAJADOR se obliga a laborar una jornada de medio tiempo, distribuidas de la siguiente manera: de lunes a viernes, el TRABAJADOR prestará sus servicios durante 4 horas en la mañana, desde las 8:00 a.m. hasta las 12:00 p.m. Asimismo, los sábados se desempeñará durante 2 horas en la jornada de 8:00 a.m. a 10:00 a.m. lo cual no implica que el empleador pueda hacer ajustes o cambios de horario respetando la media jornada laboral es decir las 21 horas semanales en la jornada ordinaria diaria de 6:00 a.m. a 10:00 p.m. cuando lo estime conveniente, sin que ello se considere como una desmejora en las condiciones laborales del TRABAJADOR, podrán repartirse las horas de la media jornada ordinaria con base en lo dispuesto por el Artículo 164 del código Sustantivo de Trabajo modificado por el artículo 23 de la Ley 50 de 1990, teniendo en cuenta que los tiempos de descanso entre las secciones de la jornada no se computan dentro de la misma, según el artículo 167 ibidem.`,
+                orden: 5
+            };
+        }
+    }
+
 
     // Combinar todas las cláusulas y ordenar
     const todasLasClausulas = [...clausulasEspecificas, ...clausulasComunes];
@@ -305,9 +320,7 @@ d. Las demás que consideren y pacten las partes por voluntad expresa en virtud 
 
 
 const ContratoModel = {
-    // =============================================
-    // CREATE
-    // =============================================
+
     create: async (data) => {
         const connection = await pool.getConnection();
         try {
@@ -630,6 +643,276 @@ const ContratoModel = {
     `, [idFuncionario, idAnioLegal]);
 
         return rows[0];
+    },
+
+    cambiarModalidadAIndefinido: async (idContrato, idPosicion, usuarioCreacion, nuevoNumeroContrato) => {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // 1. Obtener el contrato actual con todos sus datos
+            const [contratoActual] = await connection.query(`
+            SELECT 
+                c.*,
+                f.nombres,
+                f.apellidos,
+                f.tipo_documento,
+                f.numero_documento,
+                f.direccion,
+                f.telefono,
+                f.sexo,
+                f.fecha_nacimiento,
+                f.lugar_nacimiento,
+                f.numero_cuenta_bancaria,
+                f.tipo_cuenta,
+                f.correo_electronico,
+                f.fecha_ingreso,
+                b.nombre_banco,
+                e.nombre_eps,
+                e.codigo_eps,
+                ce.codigo_cesantia,
+                ce.nombre_cesantia,
+                p.codigo_pension,
+                p.nombre_pension,
+                cc.codigo_caja,
+                cc.nombre_caja
+            FROM contratos c
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            LEFT JOIN bancos b ON f.id_banco = b.id_banco
+            LEFT JOIN eps e ON f.id_eps = e.id_eps
+            LEFT JOIN cesantias ce ON f.id_cesantia = ce.id_cesantia
+            LEFT JOIN pensiones p ON f.id_pension = p.id_pension
+            LEFT JOIN caja_compensacion cc ON f.id_caja_compensacion = cc.id_caja
+            WHERE c.id_contrato = ?
+        `, [idContrato]);
+
+            if (contratoActual.length === 0) {
+                throw new Error('Contrato no encontrado');
+            }
+
+            // 2. Obtener la posición seleccionada con su información
+            const [posicion] = await connection.query(`
+            SELECT 
+                pc.*,
+                cb.nombre_cargo,
+                cb.codigo_cargo,
+                cb.es_director_agencia,
+                d.nombre_departamento,
+                d.codigo_ext,
+                hsc.salario_base,
+                hsc.bonificacion,
+                hsc.aplica_auxilio_transporte
+            FROM posiciones_cargo pc
+            INNER JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
+            INNER JOIN departamentos d ON pc.id_departamento = d.id_departamento
+            INNER JOIN historico_salarios_cargo hsc 
+                ON cb.id_cargo_base = hsc.id_cargo_base 
+                AND pc.id_anio_legal = hsc.id_anio_legal
+                AND hsc.activo = true
+            WHERE pc.id_posicion = ? AND pc.activo = true
+        `, [idPosicion]);
+
+            if (posicion.length === 0) {
+                throw new Error('Posición no encontrada o inactiva');
+            }
+
+            // 🔥 VERIFICAR QUE LA POSICIÓN ESTÉ DISPONIBLE (sin funcionario asignado)
+            if (posicion[0].id_funcionario) {
+                throw new Error('La posición seleccionada ya tiene un funcionario asignado. No puede ser ocupada.');
+            }
+
+            // 🔥 NUEVA VALIDACIÓN: Verificar que el funcionario NO tenga ya una posición en el mismo año legal
+            const idFuncionario = contratoActual[0].id_funcionario;
+            const idAnioLegal = posicion[0].id_anio_legal;
+
+            const [posicionExistente] = await connection.query(`
+            SELECT pc.*, cb.nombre_cargo
+            FROM posiciones_cargo pc
+            INNER JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
+            WHERE pc.id_funcionario = ? 
+              AND pc.id_anio_legal = ? 
+              AND pc.activo = true
+        `, [idFuncionario, idAnioLegal]);
+
+            if (posicionExistente.length > 0) {
+                throw new Error(
+                    `El funcionario ya tiene una posición asignada en el año: ` +
+                    `${posicionExistente[0].nombre_cargo} (Posición Planta: ${posicionExistente[0].numero_posicion}). ` +
+                    `No puede tener múltiples posiciones en el mismo año a excepción de que sea ENCARGADO.`
+                );
+            }
+
+            // 3. Verificar que el id_anio_legal de la posición existe
+            const [anioLegalExiste] = await connection.query(`
+            SELECT id_anio_legal FROM anios_legales WHERE id_anio_legal = ?
+        `, [idAnioLegal]);
+
+            if (anioLegalExiste.length === 0) {
+                throw new Error(`El año legal ${idAnioLegal} no existe en el sistema`);
+            }
+
+            // 4. Calcular valores
+            const salarioBase = parseFloat(posicion[0].salario_base);
+            const bonificacion = parseFloat(posicion[0].bonificacion) || 0;
+            const aplicaAuxilio = posicion[0].aplica_auxilio_transporte === 1;
+
+            // Calcular total mensual
+            let totalMensual = salarioBase + bonificacion;
+            if (aplicaAuxilio) {
+                totalMensual += parseFloat(contratoActual[0].auxilio_transporte) || 0;
+            }
+
+            // 5. Crear nuevo contrato indefinido
+            const queryNuevoContrato = `
+            INSERT INTO contratos (
+                numero_contrato,
+                tipo_contrato,
+                fecha_inicio,
+                fecha_creacion,
+                cargo,
+                salario,
+                lugar_labores,
+                ciudad_contratacion,
+                arl,
+                id_riesgo,
+                horas_laborales,
+                periodo_pago,
+                estado,
+                id_funcionario,
+                id_posicion,
+                id_anio_legal,
+                usuario_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+            const fechaActual = new Date();
+            const fechaInicio = contratoActual[0].fecha_inicio || fechaActual;
+
+            const valoresNuevoContrato = [
+                nuevoNumeroContrato,
+                'INDEFINIDO',
+                fechaInicio,
+                fechaActual,
+                posicion[0].nombre_cargo,
+                totalMensual,
+                posicion[0].sede_ubicacion || contratoActual[0].lugar_labores || 'Cali',
+                contratoActual[0].ciudad_contratacion || 'CALI',
+                contratoActual[0].arl || 'SURA',
+                contratoActual[0].id_riesgo || null,
+                contratoActual[0].horas_laborales || 220,
+                contratoActual[0].periodo_pago || 'MENSUAL',
+                'ACTIVO',
+                idFuncionario,
+                idPosicion,
+                idAnioLegal,
+                usuarioCreacion
+            ];
+
+            const [resultadoInsert] = await connection.query(queryNuevoContrato, valoresNuevoContrato);
+            const nuevoContratoId = resultadoInsert.insertId;
+
+            // 6. INSERTAR CLÁUSULAS DEL CONTRATO INDEFINIDO
+            const datosAprendiz = {};
+
+            const clausulas = obtenerClausulasPorTipo(
+                'INDEFINIDO',
+                fechaInicio,
+                null,
+                null,
+                posicion[0].nombre_cargo,
+                datosAprendiz
+            );
+
+            for (const clausula of clausulas) {
+                await connection.query(`
+                INSERT INTO clausulas_contrato (
+                    id_contrato,
+                    titulo,
+                    contenido,
+                    orden
+                ) VALUES (?, ?, ?, ?)
+            `, [nuevoContratoId, clausula.titulo, clausula.contenido, clausula.orden]);
+            }
+
+            // 7. ASIGNAR EL FUNCIONARIO A LA POSICIÓN (sin lógica de encargado, siempre es 0)
+            await connection.query(`
+            UPDATE posiciones_cargo 
+            SET id_funcionario = ?, encargado = 0 
+            WHERE id_posicion = ?
+        `, [idFuncionario, idPosicion]);
+
+            // 8. Finalizar el contrato anterior
+            await connection.query(`
+            UPDATE contratos 
+            SET estado = 'TERMINADO',
+                fecha_fin = ?
+            WHERE id_contrato = ?
+        `, [fechaActual, idContrato]);
+
+            await connection.commit();
+
+            // 9. Obtener el nuevo contrato con todos los datos
+            const [nuevoContratoCompleto] = await connection.query(`
+            SELECT 
+                c.*,
+                f.nombres,
+                f.apellidos,
+                f.tipo_documento,
+                f.numero_documento,
+                f.direccion,
+                f.telefono,
+                f.sexo,
+                f.fecha_nacimiento,
+                f.lugar_nacimiento,
+                f.numero_cuenta_bancaria,
+                f.tipo_cuenta,
+                f.correo_electronico,
+                b.nombre_banco,
+                e.nombre_eps,
+                e.codigo_eps,
+                ce.codigo_cesantia,
+                ce.nombre_cesantia,
+                p.codigo_pension,
+                p.nombre_pension,
+                cc.codigo_caja,
+                cc.nombre_caja
+            FROM contratos c
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            LEFT JOIN bancos b ON f.id_banco = b.id_banco
+            LEFT JOIN eps e ON f.id_eps = e.id_eps
+            LEFT JOIN cesantias ce ON f.id_cesantia = ce.id_cesantia
+            LEFT JOIN pensiones p ON f.id_pension = p.id_pension
+            LEFT JOIN caja_compensacion cc ON f.id_caja_compensacion = cc.id_caja
+            WHERE c.id_contrato = ?
+        `, [nuevoContratoId]);
+
+            // 🔥 OBTENER LAS CLÁUSULAS DEL CONTRATO
+            const [clausulasContrato] = await connection.query(`
+                    SELECT * FROM clausulas_contrato
+                    WHERE id_contrato = ?
+                    ORDER BY orden
+                `, [nuevoContratoId]);
+
+            await connection.commit();
+
+            return {
+                contrato_anterior_id: idContrato,
+                nuevo_contrato: {
+                    ...nuevoContratoCompleto[0],
+                    clausulas: clausulasContrato
+                },
+                posicion_asignada: idPosicion,
+                es_ascenso: salarioBase > parseFloat(contratoActual[0].salario),
+                salario_anterior: parseFloat(contratoActual[0].salario),
+                salario_nuevo: totalMensual
+            };
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     },
 
     obtenerClausulasPorTipo: obtenerClausulasPorTipo

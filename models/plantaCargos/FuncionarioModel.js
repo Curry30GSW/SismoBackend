@@ -133,6 +133,48 @@ const FuncionarioModel = {
         return rows;
     },
 
+
+    getAllFuncionarios: async (filtros = {}) => {
+        let query = `
+            SELECT 
+                id_funcionario,
+                tipo_documento,
+                numero_documento,
+                nombres,
+                apellidos,
+                sexo,
+                fecha_nacimiento,
+                edad,
+                correo_electronico,
+                telefono,
+                fecha_ingreso,
+                fecha_retiro,
+                activo,
+                created_at,
+                updated_at
+            FROM funcionarios
+            WHERE 1=1
+        `;
+        let params = [];
+
+        // Filtro por activo/inactivo
+        if (filtros.activo !== undefined) {
+            query += ' AND activo = ?';
+            params.push(filtros.activo);
+        }
+
+        // Filtro por tipo de documento
+        if (filtros.tipo_documento) {
+            query += ' AND tipo_documento = ?';
+            params.push(filtros.tipo_documento);
+        }
+
+        query += ' ORDER BY apellidos, nombres';
+
+        const [rows] = await pool.query(query, params);
+        return rows;
+    },
+
     // Obtener funcionario por ID
     getById: async (id) => {
         const [rows] = await pool.query(`
@@ -210,9 +252,23 @@ const FuncionarioModel = {
 
     // Obtener todos los funcionarios activos
     getAllActivosOnlyFuncionarios: async () => {
-        const [rows] = await pool.query(
-            'SELECT * FROM funcionarios WHERE activo = true ORDER BY apellidos, nombres'
-        );
+        const [rows] = await pool.query(`
+        SELECT 
+            f.*,
+            c.numero_contrato,
+            c.fecha_inicio,
+            c.estado,
+            c.cargo,
+            c.salario,
+            c.lugar_labores
+        FROM funcionarios f
+        INNER JOIN contratos c 
+            ON f.id_funcionario = c.id_funcionario
+        WHERE f.activo = true
+          AND c.estado = 'ACTIVO'
+        ORDER BY f.apellidos, f.nombres
+    `);
+
         return rows;
     },
 

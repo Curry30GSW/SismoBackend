@@ -23,6 +23,7 @@ const posicionFijoRoutes = require('./routes/plantaCargos/posicionFijoRoutes');
 const posicionSenaRoutes = require('./routes/plantaCargos/posicionSenaRoutes');
 const directoresCategoriasRoutes = require('./routes/plantaCargos/DirectoresRoutes');
 const departamentoRoutes = require('./routes/plantaCargos/DepartamentosRoutes');
+const asociacionesRoutes = require('./routes/plantaCargos/asociacionesRoutes');
 // =============================================
 // IMPORTS DE RUTAS - CONTRATOS
 // =============================================
@@ -35,6 +36,8 @@ const pensionesRoutes = require('./routes/Contratos/pensionesRoutes');
 const nivelRiesgoRoutes = require('./routes/Contratos/nivelRiesgoRoutes');
 const prorrogaRoutes = require('./routes/Contratos/prorrogaRoutes');
 const preavisoNoProrrogaRoutes = require('./routes/Contratos/preavisoNoProrrogaRoutes');
+const ascensoRoutes = require('./routes/Contratos/ascensoRoutes');
+const encargaturaRoutes = require('./routes/Contratos/EncargaturaRoutes');
 
 dotenv.config({
     path: `.env.${process.env.NODE_ENV || 'development'}`
@@ -63,18 +66,19 @@ app.use(express.json());
 // =============================================
 // RUTAS - PLANTA DE CARGOS
 // =============================================
-app.use('/api/anios', anioLegalRoutes);              // -> /api/anios-legales
-app.use('/api/cargos-base', cargoBaseRoutes);              // -> /api/cargos-base
-app.use('/api/funcionarios', funcionarioRoutes);            // -> /api/funcionarios
-app.use('/api/categorias-director', categoriaDirectorRoutes);      // -> /api/categorias-director
-app.use('/api/posiciones-cargo', posicionCargoRoutes);          // -> /api/posiciones-cargo
+app.use('/api/anios', anioLegalRoutes);
+app.use('/api/cargos-base', cargoBaseRoutes);
+app.use('/api/funcionarios', funcionarioRoutes);
+app.use('/api/categorias-director', categoriaDirectorRoutes);
+app.use('/api/posiciones-cargo', posicionCargoRoutes);
 app.use('/api/posiciones-fijo', posicionFijoRoutes);
 app.use('/api/posiciones-sena', posicionSenaRoutes)
-app.use('/api/movimientos-cargo', movimientoCargoRoutes);        // -> /api/movimientos-cargo
-app.use('/api/historico-salario', historicoSalarioRoutes);       // -> /api/historicos-salario
+app.use('/api/movimientos-cargo', movimientoCargoRoutes);
+app.use('/api/historico-salario', historicoSalarioRoutes);
 app.use('/api/comparativo', comparativoRoutes);
-app.use('/api/prestaciones', configuracionPrestacionesRoutes); // -> /api/configuracion-prestaciones
-app.use('/api/tipos-planta', tipoPlantaRoutes);        // -> /api/tipos-planta
+app.use('/api/prestaciones', configuracionPrestacionesRoutes);
+app.use('/api/tipos-planta', tipoPlantaRoutes);
+app.use('/api/asociaciones-netas', asociacionesRoutes);
 
 //RUTAS
 app.use('/api', directoresCategoriasRoutes)
@@ -93,6 +97,9 @@ app.use('/api/pensiones', pensionesRoutes);
 app.use('/api/niveles-riesgo', nivelRiesgoRoutes);
 app.use('/api/prorrogas', prorrogaRoutes);
 app.use('/api/preavisos', preavisoNoProrrogaRoutes);
+app.use('/api/ascensos', ascensoRoutes);
+app.use('/api/encargaturas', encargaturaRoutes);
+
 
 
 app.listen(PORT, '0.0.0.0', () => {

@@ -88,9 +88,14 @@ const CargoBaseModel = {
                 tp.id_tipo_planta as tipo_planta_id,
                 tp.codigo_tipo,
                 tp.nombre_tipo,
-                tp.color_representacion
+                tp.color_representacion,
+                cd.codigo_categoria,
+                cd.nombre_categoria,
+                cd.rango_min_clientes,
+                cd.rango_max_clientes
             FROM cargos_base cb
             LEFT JOIN tipos_planta tp ON cb.id_tipo_planta = tp.id_tipo_planta
+            LEFT JOIN categorias_director cd ON cb.id_categoria_director = cd.id_categoria
             WHERE cb.id_cargo_base = ?
         `, [id]);
         return rows[0];
