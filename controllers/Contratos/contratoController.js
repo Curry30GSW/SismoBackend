@@ -197,6 +197,7 @@ const contratoController = {
                         nombre_cargo: p.nombre_cargo,
                         id_departamento: p.id_departamento,
                         nombre_departamento: p.nombre_departamento,
+                        numero_posicion: p.numero_posicion,
                         salario_base: p.salario_base,
                         bonificacion: p.bonificacion,
                         aplica_auxilio_transporte: p.aplica_auxilio_transporte

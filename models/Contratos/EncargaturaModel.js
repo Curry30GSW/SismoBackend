@@ -174,7 +174,7 @@ const EncargaturaModel = {
                 d.nombre_departamento
             FROM encargaturas e
             INNER JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
-            INNER JOIN posiciones_cargo_fijo pf ON e.id_posicion_fijo = pf.id_posicion_fijo
+            INNER JOIN posiciones_cargo pf ON e.id_posicion_fijo = pf.id_posicion
             INNER JOIN cargos_base cb ON pf.id_cargo_base = cb.id_cargo_base
             INNER JOIN departamentos d ON pf.id_departamento = d.id_departamento
             ORDER BY e.created_at DESC
