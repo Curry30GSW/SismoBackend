@@ -163,6 +163,7 @@ const contratoController = {
                     sexo: funcionario.sexo,
                     fecha_nacimiento: funcionario.fecha_nacimiento,
                     lugar_nacimiento: funcionario.lugar_nacimiento,
+                    correo_electronico: funcionario.correo_electronico,
 
                     // Datos bancarios
                     id_banco: funcionario.id_banco,

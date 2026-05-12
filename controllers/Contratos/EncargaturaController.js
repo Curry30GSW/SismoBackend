@@ -2,6 +2,7 @@ const EncargaturaModel = require('../../models/Contratos/EncargaturaModel');
 const PosicionModel = require('../../models/PlantaCargos/PosicionCargoModel');
 const FuncionarioModel = require('../../models/PlantaCargos/FuncionarioModel');
 const AnioLegalModel = require('../../models/PlantaCargos/AnioLegalModel');
+const pool = require('../../config/ConectDb');
 
 const encargaturaController = {
     // 1. GENERAR CÓDIGO DE ENCARGATURA
@@ -215,7 +216,56 @@ const encargaturaController = {
                 message: error.message
             });
         }
+    },
+
+    finalizarEncargatura: async (req, res) => {
+        try {
+            const { id_encargatura } = req.params;
+            const { fecha_finalizacion } = req.body;
+
+
+            // Validar que id_encargatura sea un número
+            const id = parseInt(id_encargatura);
+            if (isNaN(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'ID de encargatura inválido'
+                });
+            }
+
+            // Llamar al método interno
+            const result = await EncargaturaModel.finalizarEncargatura(
+                id,
+                fecha_finalizacion
+            );
+
+            res.json(result);
+
+        } catch (error) {
+            console.error('Error en finalizarEncargaturaEndpoint:', error);
+
+            if (error.message === 'Encargatura no encontrada') {
+                return res.status(404).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
+            if (error.message === 'Esta encargatura ya está vencida o finalizada') {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor',
+                error: error.message
+            });
+        }
     }
+
 };
 
 module.exports = encargaturaController;

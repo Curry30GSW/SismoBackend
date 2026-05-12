@@ -187,6 +187,73 @@ const EncargaturaModel = {
     getCount: async () => {
         const [rows] = await pool.query('SELECT COUNT(*) as total FROM encargaturas');
         return rows[0].total;
+    },
+
+    finalizarEncargatura: async (idEncargatura, fechaFinalizacion) => {
+        const connection = await pool.getConnection();
+
+        try {
+            await connection.beginTransaction();
+
+            // 1. Obtener la encargatura con el id_posicion_fijo
+            const [encargatura] = await connection.query(
+                `SELECT id_encargatura, id_posicion_fijo, id_funcionario 
+             FROM encargaturas 
+             WHERE id_encargatura = ?`,
+                [idEncargatura]
+            );
+
+            if (encargatura.length === 0) {
+                throw new Error('Encargatura no encontrada');
+            }
+
+            const datosEncargatura = encargatura[0];
+
+            // 2. Verificar si ya está finalizada
+            if (datosEncargatura.fecha_fin && datosEncargatura.fecha_fin < new Date()) {
+                throw new Error('Esta encargatura ya está vencida o finalizada');
+            }
+
+            // 3. Actualizar la encargatura con fecha de finalización
+            const fechaFin = fechaFinalizacion || new Date().toISOString().split('T')[0];
+
+            await connection.query(
+                `UPDATE encargaturas 
+             SET fecha_fin = ?, 
+                 hasta_nuevo_aviso = 0
+             WHERE id_encargatura = ?`,
+                [fechaFin, idEncargatura]
+            );
+
+            // 4. Liberar la posición (quitar encargatura)
+            await connection.query(
+                `UPDATE posiciones_cargo
+             SET id_funcionario = NULL,
+                 encargado = 0
+             WHERE id_posicion = ?`,
+                [datosEncargatura.id_posicion_fijo]
+            );
+
+            await connection.commit();
+
+            return {
+                success: true,
+                message: 'Encargatura finalizada y posición liberada exitosamente',
+                data: {
+                    id_encargatura: idEncargatura,
+                    id_posicion_fijo: datosEncargatura.id_posicion_fijo,
+                    fecha_fin: fechaFin,
+                    posicion_liberada: true
+                }
+            };
+
+        } catch (error) {
+            await connection.rollback();
+            console.error('Error al finalizar encargatura:', error);
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 };
 

@@ -12,6 +12,8 @@ router.get('/generar-codigo', encargaturaController.generarCodigo);
 // POST /api/encargaturas - Crear nueva encargatura
 router.post('/', encargaturaController.create);
 
+router.put('/:id_encargatura/finalizar', encargaturaController.finalizarEncargatura);
+
 // GET /api/encargaturas - Obtener todas las encargaturas (paginado)
 router.get('/', encargaturaController.getAll);
 
