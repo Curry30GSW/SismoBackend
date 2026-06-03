@@ -4,24 +4,28 @@ const AscensoModel = {
     // Generar código de ascenso
     generarCodigoAscenso: async () => {
         try {
+            const anioActual = new Date().getFullYear();
+
+            // Buscar el último código del año actual
             const [rows] = await pool.query(`
-                SELECT codigo_ascenso 
-                FROM ascensos 
-                WHERE codigo_ascenso IS NOT NULL 
-                ORDER BY id_ascenso DESC 
-                LIMIT 1
-            `);
+            SELECT codigo_ascenso 
+            FROM ascensos 
+            WHERE codigo_ascenso LIKE ? 
+            ORDER BY id_ascenso DESC 
+            LIMIT 1
+        `, [`ASC-${anioActual}-%`]);
 
             let nuevoNumero = 1;
             if (rows[0] && rows[0].codigo_ascenso) {
-                const match = rows[0].codigo_ascenso.match(/ASC-(\d+)/);
+                // Extraer el número del último código (formato: ASC-2026-123)
+                const match = rows[0].codigo_ascenso.match(/ASC-\d+-(\d+)/);
                 if (match) {
                     nuevoNumero = parseInt(match[1]) + 1;
                 }
             }
 
-            const numeroFormateado = nuevoNumero.toString().padStart(4, '0');
-            return `ASC-${numeroFormateado}`;
+            // Sin padding, solo el número
+            return `ASC-${anioActual}-${nuevoNumero}`;
         } catch (error) {
             console.error('Error generando código de ascenso:', error);
             const timestamp = Date.now().toString().slice(-6);
@@ -140,30 +144,36 @@ const AscensoModel = {
     },
 
     // Obtener todos los ascensos
-    getAll: async (limit = 100, offset = 0) => {
+    getAll: async () => {
         const [rows] = await pool.query(`
-            SELECT 
-                a.id_ascenso,
-                a.codigo_ascenso,
-                a.fecha_ascenso,
-                a.motivo,
-                f.nombres,
-                f.apellidos,
-                f.numero_documento,
-                c_ant.numero_contrato as contrato_anterior,
-                c_nuevo.numero_contrato as contrato_nuevo,
-                c_ant.cargo as cargo_anterior,
-                c_nuevo.cargo as cargo_nuevo,
-                c_ant.salario as salario_anterior,
-                c_nuevo.salario as salario_nuevo,
-                ROUND(((c_nuevo.salario - c_ant.salario) / c_ant.salario) * 100, 2) as incremento_porcentaje
-            FROM ascensos a
-            INNER JOIN contratos c_ant ON a.id_contrato_anterior = c_ant.id_contrato
-            INNER JOIN contratos c_nuevo ON a.id_contrato_nuevo = c_nuevo.id_contrato
-            INNER JOIN funcionarios f ON c_nuevo.id_funcionario = f.id_funcionario
-            ORDER BY a.fecha_ascenso DESC
-            LIMIT ? OFFSET ?
-        `, [limit, offset]);
+        SELECT 
+            a.id_ascenso,
+            a.codigo_ascenso,
+            a.fecha_ascenso,
+            f.nombres,
+            f.apellidos,
+            f.numero_documento,
+            c_ant.numero_contrato as contrato_anterior,
+            c_ant.estado as estado_contrato_anterior,
+            c_nuevo.numero_contrato as contrato_nuevo,
+            c_nuevo.estado as estado_contrato_nuevo,
+            c_ant.cargo as cargo_anterior,
+            c_ant.lugar_labores as departamento_anterior,
+            c_nuevo.lugar_labores as departamento_nuevo,
+            c_nuevo.cargo as cargo_nuevo,
+            c_ant.fecha_inicio as fecha_inicio_anterior,
+            c_ant.salario as salario_anterior,
+            c_nuevo.salario as salario_nuevo
+        FROM ascensos a
+        INNER JOIN contratos c_ant 
+            ON a.id_contrato_anterior = c_ant.id_contrato
+        INNER JOIN contratos c_nuevo 
+            ON a.id_contrato_nuevo = c_nuevo.id_contrato
+        INNER JOIN funcionarios f 
+            ON c_nuevo.id_funcionario = f.id_funcionario
+        ORDER BY a.fecha_ascenso DESC
+    `);
+
         return rows;
     },
 

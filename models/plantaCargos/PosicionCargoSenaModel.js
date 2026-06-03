@@ -7,6 +7,7 @@ const PosicionSenaModel = {
     create: async (data) => {
         const connection = await pool.getConnection();
         try {
+
             const query = `
                 INSERT INTO posiciones_cargo_sena (
                     id_cargo_base,

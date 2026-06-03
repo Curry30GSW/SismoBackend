@@ -29,13 +29,82 @@ const PreavisoNoProrrogaModel = {
         return { id_preaviso: result.insertId, ...data };
     },
 
-    // Obtener el último código de preaviso generado
-    obtenerUltimoCodigo: async () => {
+
+    getAll: async (filtros = {}) => {
+        let query = `
+            SELECT 
+                p.*,
+                c.numero_contrato,
+                c.cargo,
+                c.estado as estado_contrato,
+                f.nombres,
+                f.apellidos,
+                f.numero_documento
+            FROM preavisos_no_prorroga p
+            INNER JOIN contratos c ON p.id_contrato = c.id_contrato
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (filtros.estado) {
+            query += ' AND p.estado = ?';
+            params.push(filtros.estado);
+        }
+
+        if (filtros.id_contrato) {
+            query += ' AND p.id_contrato = ?';
+            params.push(filtros.id_contrato);
+        }
+
+        if (filtros.busqueda) {
+            query += ` AND (
+                f.nombres LIKE ? OR 
+                f.apellidos LIKE ? OR 
+                f.numero_documento LIKE ? OR 
+                c.numero_contrato LIKE ? OR
+                p.codigo_preaviso LIKE ?
+            )`;
+            const searchTerm = `%${filtros.busqueda}%`;
+            params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        }
+
+        query += ' ORDER BY p.fecha_creacion ASC';
+
+        const [rows] = await pool.query(query, params);
+        return rows;
+    },
+
+    getById: async (id) => {
         const [rows] = await pool.query(`
-            SELECT codigo_preaviso FROM preavisos_no_prorroga 
-            ORDER BY id_preaviso DESC 
-            LIMIT 1
-        `);
+            SELECT 
+                p.*,
+                c.numero_contrato,
+                c.cargo,
+                c.fecha_inicio as contrato_fecha_inicio,
+                c.fecha_fin as contrato_fecha_fin,
+                f.nombres,
+                f.apellidos,
+                f.numero_documento,
+                f.tipo_documento
+            FROM preavisos_no_prorroga p
+            INNER JOIN contratos c ON p.id_contrato = c.id_contrato
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            WHERE p.id_preaviso = ?
+        `, [id]);
+        return rows[0];
+    },
+
+
+    // Obtener el último código de preaviso generado
+    obtenerUltimoCodigo: async (anio) => {
+        const [rows] = await pool.query(`
+        SELECT codigo_preaviso 
+        FROM preavisos_no_prorroga 
+        WHERE codigo_preaviso LIKE ? 
+        ORDER BY id_preaviso DESC 
+        LIMIT 1
+    `, [`NPR-${anio}-%`]);
         return rows.length > 0 ? rows[0].codigo_preaviso : null;
     },
 

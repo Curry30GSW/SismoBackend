@@ -75,6 +75,71 @@ const ProrrogaModel = {
         }
     },
 
+    getAll: async (filtros = {}) => {
+        let query = `
+            SELECT 
+                p.*,
+                c.numero_contrato,
+                c.cargo,
+                c.estado as estado_contrato,
+                f.nombres,
+                f.apellidos,
+                f.numero_documento
+            FROM prorrogas_contrato p
+            INNER JOIN contratos c ON p.id_contrato = c.id_contrato
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (filtros.estado) {
+            query += ' AND p.estado = ?';
+            params.push(filtros.estado);
+        }
+
+        if (filtros.id_contrato) {
+            query += ' AND p.id_contrato = ?';
+            params.push(filtros.id_contrato);
+        }
+
+        if (filtros.busqueda) {
+            query += ` AND (
+                f.nombres LIKE ? OR 
+                f.apellidos LIKE ? OR 
+                f.numero_documento LIKE ? OR 
+                c.numero_contrato LIKE ? OR
+                p.codigo_prorroga LIKE ?
+            )`;
+            const searchTerm = `%${filtros.busqueda}%`;
+            params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        }
+
+        query += ' ORDER BY p.fecha_prorroga ASC';
+
+        const [rows] = await pool.query(query, params);
+        return rows;
+    },
+
+    getById: async (id) => {
+        const [rows] = await pool.query(`
+            SELECT 
+                p.*,
+                c.numero_contrato,
+                c.cargo,
+                c.fecha_inicio as contrato_fecha_inicio,
+                c.fecha_fin as contrato_fecha_fin,
+                f.nombres,
+                f.apellidos,
+                f.numero_documento,
+                f.tipo_documento
+            FROM prorrogas_contrato p
+            INNER JOIN contratos c ON p.id_contrato = c.id_contrato
+            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+            WHERE p.id_prorroga = ?
+        `, [id]);
+        return rows[0];
+    },
+
     // Obtener todas las prórrogas de un contrato
     getByContrato: async (idContrato) => {
         const [rows] = await pool.query(`
@@ -118,7 +183,7 @@ const ProrrogaModel = {
 
         // Se puede prorrogar hasta 30 días después del vencimiento
         const diasRestantes = Math.ceil((fechaFin - hoy) / (1000 * 60 * 60 * 24));
-        return diasRestantes <= 30;
+        return diasRestantes <= 40;
     },
 
     // Completar una prórroga (cuando se vence el nuevo plazo)

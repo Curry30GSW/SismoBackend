@@ -26,7 +26,7 @@ router.put('/:id', contratoController.update);
 // =============================================
 // ACCIONES ESPECÍFICAS
 // =============================================
-router.patch('/:id/finalizar', contratoController.finalizar);
+router.post('/:id/finalizar', contratoController.finalizarContrato);
 router.patch('/:id/prorrogar', contratoController.prorrogar);
 router.delete('/:id', contratoController.delete);
 

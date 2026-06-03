@@ -12,5 +12,7 @@ router.get('/contrato/:id/preaviso/verificar', preavisoNoProrrogaController.veri
 // Cancelar preaviso de un contrato
 router.delete('/contrato/:id/preaviso', preavisoNoProrrogaController.cancelar);
 
+router.get('/', preavisoNoProrrogaController.getAll);
 
+router.get('/:id', preavisoNoProrrogaController.getById);
 module.exports = router;

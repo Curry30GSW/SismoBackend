@@ -4,24 +4,27 @@ const EncargaturaModel = {
     // Generar código de encargatura
     generarCodigoEncargatura: async () => {
         try {
+            const anioActual = new Date().getFullYear();
+
+            // Buscar el último código del año actual
             const [rows] = await pool.query(`
-                SELECT codigo_encargatura 
-                FROM encargaturas 
-                WHERE codigo_encargatura IS NOT NULL 
-                ORDER BY id_encargatura DESC 
-                LIMIT 1
-            `);
+            SELECT codigo_encargatura 
+            FROM encargaturas 
+            WHERE codigo_encargatura LIKE ? 
+            ORDER BY id_encargatura DESC 
+            LIMIT 1
+        `, [`ENC-${anioActual}-%`]);
 
             let nuevoNumero = 1;
             if (rows[0] && rows[0].codigo_encargatura) {
-                const match = rows[0].codigo_encargatura.match(/ENC-(\d+)/);
+                const match = rows[0].codigo_encargatura.match(/ENC-\d+-(\d+)/);
                 if (match) {
                     nuevoNumero = parseInt(match[1]) + 1;
                 }
             }
 
-            const numeroFormateado = nuevoNumero.toString().padStart(4, '0');
-            return `ENC-${numeroFormateado}`;
+            // Sin padding, solo el número
+            return `ENC-${anioActual}-${nuevoNumero}`;
         } catch (error) {
             console.error('Error generando código de encargatura:', error);
             const timestamp = Date.now().toString().slice(-6);

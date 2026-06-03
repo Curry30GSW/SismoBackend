@@ -5,32 +5,32 @@ const preavisoNoProrrogaController = {
 
     generarCodigoPreaviso: async () => {
         try {
-            // Obtener el último código generado
-            const ultimoCodigo = await PreavisoNoProrrogaModel.obtenerUltimoCodigo();
+            const anioActual = new Date().getFullYear();
+
+            // Obtener el último código del año actual
+            const ultimoCodigo = await PreavisoNoProrrogaModel.obtenerUltimoCodigo(anioActual);
 
             let nuevoNumero = 1;
 
             if (ultimoCodigo) {
-                // Extraer el número del código (ejemplo: NAP-001 -> 1)
-                const match = ultimoCodigo.match(/NAP-(\d+)/);
+                // Extraer el número del código (ejemplo: NPR-2026-5 -> 5)
+                const match = ultimoCodigo.match(/NPR-\d+-(\d+)/);
                 if (match) {
                     nuevoNumero = parseInt(match[1]) + 1;
                 }
             }
 
-            // Formatear el número con ceros a la izquierda (3 dígitos)
-            const numeroFormateado = nuevoNumero.toString().padStart(3, '0');
-            const codigo = `NAP-${numeroFormateado}`;
+            // Sin padding, solo el número
+            const codigo = `NPR-${anioActual}-${nuevoNumero}`;
 
             return codigo;
         } catch (error) {
             console.error('Error generando código de preaviso:', error);
             // Si hay error, generar un código con timestamp como fallback
             const timestamp = Date.now().toString().slice(-6);
-            return `NAP-${timestamp}`;
+            return `NPR-${timestamp}`;
         }
     },
-
 
     // Crear preaviso de no prórroga
     create: async (req, res) => {
@@ -55,10 +55,10 @@ const preavisoNoProrrogaController = {
                 });
             }
 
-            if (contrato.estado !== 'ACTIVO') {
+            if (contrato.estado !== 'ACTIVO' && contrato.estado !== 'PRORROGADO') {
                 return res.status(400).json({
                     success: false,
-                    message: 'El contrato debe estar activo para generar un preaviso'
+                    message: 'El contrato debe estar activo o prorrogado para generar un preaviso'
                 });
             }
 
@@ -116,7 +116,39 @@ const preavisoNoProrrogaController = {
         }
     },
 
+    getAll: async (req, res) => {
+        try {
+            const { estado, busqueda } = req.query;
+            const preavisos = await PreavisoNoProrrogaModel.getAll({ estado, busqueda });
 
+            res.json({
+                success: true,
+                data: preavisos,
+                total: preavisos.length
+            });
+
+        } catch (error) {
+            console.error('Error en getAll preavisos:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    getById: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const preaviso = await PreavisoNoProrrogaModel.getById(id);
+
+            if (!preaviso) {
+                return res.status(404).json({ success: false, message: 'Preaviso no encontrado' });
+            }
+
+            res.json({ success: true, data: preaviso });
+
+        } catch (error) {
+            console.error('Error en getById preaviso:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
     // Verificar si un contrato tiene preaviso activo
     verificarPreaviso: async (req, res) => {
         try {

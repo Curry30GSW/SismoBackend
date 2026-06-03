@@ -126,10 +126,10 @@ PARÁGRAFO TERCERO: Las partes acuerdan que en los casos en que se le reconozcan
         const esUniversitario = datosAprendiz.esUniversitario || false;
 
         // Fechas de etapas (si no se envían, usar las del contrato)
-        const fechaInicioelectiva = datosAprendiz.fecha_fase_electiva_inicio || fechaInicio;
-        const fechaFinelectiva = datosAprendiz.fecha_fase_electiva_fin || fechaInicio;
-        const fechaInicioPractica = datosAprendiz.fecha_fase_practica_inicio || fechaInicio;
-        const fechaFinPractica = datosAprendiz.fecha_fase_practica_fin || fechaFin;
+        const fechaInicioelectiva = datosAprendiz.electiva_inicio || fechaInicio;
+        const fechaFinelectiva = datosAprendiz.electiva_fin || fechaInicio;
+        const fechaInicioPractica = datosAprendiz.practica_inicio || fechaInicio;
+        const fechaFinPractica = datosAprendiz.practica_fin || fechaFin;
 
 
 
@@ -351,8 +351,12 @@ const ContratoModel = {
                     especialidad,
                     instituto_formacion,
                     otro_instituto,
-                    usuario_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    usuario_creacion,
+                    electiva_inicio,
+                    electiva_fin,
+                    practica_inicio,
+                    practica_fin
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 data.id_funcionario,
                 data.id_posicion,
@@ -376,7 +380,11 @@ const ContratoModel = {
                 data.especialidad || null,
                 data.instituto_formacion || null,
                 data.otro_instituto || null,
-                data.usuario_creacion || 'SISTEMA'
+                data.usuario_creacion || 'SISTEMA',
+                data.electiva_inicio || null,
+                data.electiva_fin || null,
+                data.practica_inicio || null,
+                data.practica_fin || null
             ]);
 
             const idContrato = result.insertId;
@@ -390,10 +398,10 @@ const ContratoModel = {
                 arl: data.arl,
                 salario: data.salario,
                 salarioMinimoAnual: data.salario_minimo_anual || 0,
-                fecha_fase_electiva_inicio: data.fecha_fase_electiva_inicio || data.fecha_inicio,
-                fecha_fase_electiva_fin: data.fecha_fase_electiva_fin || data.fecha_inicio,
-                fecha_fase_practica_inicio: data.fecha_fase_practica_inicio || data.fecha_inicio,
-                fecha_fase_practica_fin: data.fecha_fase_practica_fin || data.fecha_fin
+                electiva_inicio: data.electiva_inicio || data.fecha_inicio,
+                electiva_fin: data.electiva_fin || data.fecha_inicio,
+                practica_inicio: data.practica_inicio || data.fecha_inicio,
+                practica_fin: data.practica_fin || data.fecha_fin
             };
 
             // 2. Insertar cláusulas según tipo de contrato
@@ -430,48 +438,52 @@ const ContratoModel = {
 
     getAll: async (filtros = {}) => {
         let query = `
-            SELECT 
-                c.id_contrato,
-                c.tipo_contrato,
-                c.numero_contrato,
-                c.fecha_inicio,
-                c.fecha_fin,
-                c.termino_inicial,
-                c.cargo,
-                c.salario,
-                c.periodo_pago,
-                c.horas_laborales,
-                c.lugar_labores,
-                c.ciudad_contratacion,
-                c.arl,
-                c.estado,
-                c.fecha_creacion,
-                
-                -- Datos del funcionario
-                f.id_funcionario,
-                f.nombres,
-                f.apellidos,
-                f.numero_documento,
-                f.tipo_documento,
-                
-                -- Datos de la posición
-                pc.id_posicion,
-                pc.codigo_posicion,
-                d.nombre_departamento,
-                
-                -- Datos del año legal
-                al.anio,
-                
-                -- Conteo de cláusulas
-                (SELECT COUNT(*) FROM clausulas_contrato WHERE id_contrato = c.id_contrato) as total_clausulas
-                
-            FROM contratos c
-            INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
-            LEFT JOIN posiciones_cargo pc ON c.id_posicion = pc.id_posicion
-            LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
-            INNER JOIN anios_legales al ON c.id_anio_legal = al.id_anio_legal
-            WHERE 1=1
-        `;
+        SELECT 
+            c.id_contrato,
+            c.tipo_contrato,
+            c.numero_contrato,
+            c.fecha_inicio,
+            c.fecha_fin,
+            c.termino_inicial,
+            c.cargo,
+            c.salario,
+            c.periodo_pago,
+            c.horas_laborales,
+            c.lugar_labores,
+            c.ciudad_contratacion,
+            c.arl,
+            c.estado,
+            c.fecha_creacion,
+            c.electiva_inicio,
+            c.electiva_fin,
+            c.practica_inicio,
+            c.practica_fin,
+            
+            -- Datos del funcionario
+            f.id_funcionario,
+            f.nombres,
+            f.apellidos,
+            f.numero_documento,
+            f.tipo_documento,
+            
+            -- Datos de la posición
+            pc.id_posicion,
+            pc.codigo_posicion,
+            d.nombre_departamento,
+            
+            -- Datos del año legal
+            al.anio,
+            
+            -- Conteo de cláusulas
+            (SELECT COUNT(*) FROM clausulas_contrato WHERE id_contrato = c.id_contrato) as total_clausulas
+            
+        FROM contratos c
+        INNER JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+        LEFT JOIN posiciones_cargo pc ON c.id_posicion = pc.id_posicion
+        LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
+        INNER JOIN anios_legales al ON c.id_anio_legal = al.id_anio_legal
+        WHERE 1=1
+    `;
 
         let params = [];
         let condiciones = [];
@@ -510,12 +522,12 @@ const ContratoModel = {
         if (filtros.busqueda) {
             const busqueda = `%${filtros.busqueda}%`;
             condiciones.push(`(
-                f.nombres LIKE ? OR 
-                f.apellidos LIKE ? OR 
-                f.numero_documento LIKE ? OR 
-                c.numero_contrato LIKE ? OR 
-                c.cargo LIKE ?
-            )`);
+            f.nombres LIKE ? OR 
+            f.apellidos LIKE ? OR 
+            f.numero_documento LIKE ? OR 
+            c.numero_contrato LIKE ? OR 
+            c.cargo LIKE ?
+        )`);
             params.push(busqueda, busqueda, busqueda, busqueda, busqueda);
         }
 
@@ -524,18 +536,10 @@ const ContratoModel = {
         }
 
         // Ordenamiento
-        const orden = filtros.orden || 'ASC';
-        const ordenarPor = filtros.ordenar_por || 'c.id_contrato';
+        const orden = filtros.orden || 'DESC';
+        const ordenarPor = filtros.ordenar_por || 'c.fecha_creacion';
         query += ` ORDER BY ${ordenarPor} ${orden}`;
 
-        // Paginación
-        if (filtros.limite) {
-            const pagina = filtros.pagina || 1;
-            const limite = filtros.limite || 10;
-            const offset = (pagina - 1) * limite;
-            query += ' LIMIT ? OFFSET ?';
-            params.push(limite, offset);
-        }
 
         const [rows] = await pool.query(query, params);
         return rows;
@@ -622,7 +626,80 @@ const ContratoModel = {
         return contrato;
     },
 
-    // Actualizar cláusula específica
+    update: async (id, data) => {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Construir dinámicamente la consulta de actualización
+            const campos = [];
+            const valores = [];
+
+            if (data.estado !== undefined) {
+                campos.push('estado = ?');
+                valores.push(data.estado);
+            }
+
+            if (data.fecha_fin !== undefined) {
+                campos.push('fecha_fin = ?');
+                valores.push(data.fecha_fin);
+            }
+
+            if (data.fecha_modificacion !== undefined) {
+                campos.push('fecha_modificacion = ?');
+                valores.push(data.fecha_modificacion);
+            }
+
+            if (data.fecha_inicio !== undefined) {
+                campos.push('fecha_inicio = ?');
+                valores.push(data.fecha_inicio);
+            }
+
+            if (data.cargo !== undefined) {
+                campos.push('cargo = ?');
+                valores.push(data.cargo);
+            }
+
+            if (data.salario !== undefined) {
+                campos.push('salario = ?');
+                valores.push(data.salario);
+            }
+
+            if (data.lugar_labores !== undefined) {
+                campos.push('lugar_labores = ?');
+                valores.push(data.lugar_labores);
+            }
+
+            if (data.estado !== undefined) {
+                campos.push('estado = ?');
+                valores.push(data.estado);
+            }
+
+            if (data.id_posicion !== undefined) {
+                campos.push('id_posicion = ?');
+                valores.push(data.id_posicion);
+            }
+
+            if (campos.length === 0) {
+                throw new Error('No hay campos para actualizar');
+            }
+
+            valores.push(id);
+
+            const query = `UPDATE contratos SET ${campos.join(', ')} WHERE id_contrato = ?`;
+            const [result] = await connection.query(query, valores);
+
+            await connection.commit();
+            return result;
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    },
+
     updateClausula: async (idClausula, contenido) => {
         const [result] = await pool.query(`
             UPDATE clausulas_contrato
@@ -632,15 +709,16 @@ const ContratoModel = {
         return result;
     },
 
-    getContratoActivoPorFuncionario: async (idFuncionario, idAnioLegal) => {
+    getContratoActivoPorFuncionario: async (idFuncionario) => {
         const [rows] = await pool.query(`
         SELECT c.*, al.anio
         FROM contratos c
         INNER JOIN anios_legales al ON c.id_anio_legal = al.id_anio_legal
         WHERE c.id_funcionario = ? 
-          AND c.id_anio_legal = ?
           AND c.estado IN ('ACTIVO', 'PRORROGADO')
-    `, [idFuncionario, idAnioLegal]);
+        ORDER BY c.fecha_creacion DESC
+        LIMIT 1
+    `, [idFuncionario]);
 
         return rows[0];
     },

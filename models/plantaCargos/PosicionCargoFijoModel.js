@@ -5,24 +5,18 @@ const PosicionFijoModel = {
     // CREATE
     // =============================================
     create: async (data) => {
-        const connection = await pool.getConnection();
+        let connection;
         try {
+            connection = await pool.getConnection();
+
             const query = `
-                INSERT INTO posiciones_cargo_fijo (
-                    id_cargo_base,
-                    id_anio_legal,
-                    codigo_posicion,
-                    id_departamento,
-                    sede_ubicacion,
-                    salario_base,
-                    aplica_auxilio_transporte,
-                    bonificacion,
-                    fecha_creacion_posicion,
-                    activo,
-                    id_funcionario,
-                    encargado
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
+            INSERT INTO posiciones_cargo_fijo (
+                id_cargo_base, id_anio_legal, codigo_posicion,
+                id_departamento, sede_ubicacion, salario_base,
+                aplica_auxilio_transporte, bonificacion,
+                fecha_creacion_posicion, activo, id_funcionario, encargado
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
             const values = [
                 data.id_cargo_base,
@@ -42,8 +36,11 @@ const PosicionFijoModel = {
             const [result] = await connection.query(query, values);
             return { id_posicion_fijo: result.insertId, ...data };
 
+        } catch (error) {
+            console.error('Error en PosicionFijoModel.create:', error.message);
+            throw error;
         } finally {
-            connection.release();
+            if (connection) connection.release();
         }
     },
 

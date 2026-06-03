@@ -8,29 +8,34 @@ const prorrogaController = {
 
     //FUNCION PARA GENERAR CODIGO DE PRORROGA UNICO Y SECUENCIAL
     generarCodigoProrroga: async () => {
-        // Buscar el último código usado en TODAS las prórrogas
-        const [result] = await pool.query(`
+        try {
+            const anioActual = new Date().getFullYear();
+
+            // Buscar el último código del año actual
+            const [result] = await pool.query(`
             SELECT codigo_prorroga 
             FROM prorrogas_contrato 
-            WHERE codigo_prorroga LIKE 'PC-%'
+            WHERE codigo_prorroga LIKE ? 
             ORDER BY id_prorroga DESC 
             LIMIT 1
-        `);
+        `, [`PR-${anioActual}-%`]);
 
-        let ultimoNumero = 0;
+            let nuevoNumero = 1;
 
-        if (result.length > 0 && result[0].codigo_prorroga) {
-            // Extraer el número del último código (ej: PC-001 -> 1)
-            const partes = result[0].codigo_prorroga.split('-');
-            if (partes.length >= 2) {
-                ultimoNumero = parseInt(partes[1]) || 0;
+            if (result.length > 0 && result[0].codigo_prorroga) {
+                const match = result[0].codigo_prorroga.match(/PR-\d+-(\d+)/);
+                if (match) {
+                    nuevoNumero = parseInt(match[1]) + 1;
+                }
             }
+
+            // Sin padding, solo el número
+            return `PR-${anioActual}-${nuevoNumero}`;
+        } catch (error) {
+            console.error('Error generando código de prórroga:', error);
+            const timestamp = Date.now().toString().slice(-6);
+            return `PR-${timestamp}`;
         }
-
-        // Generar el nuevo número (incrementar en 1)
-        const nuevoNumero = (ultimoNumero + 1).toString().padStart(3, '0');
-
-        return `PC-${nuevoNumero}`;
     },
 
 
@@ -103,6 +108,40 @@ const prorrogaController = {
                 success: false,
                 message: error.message
             });
+        }
+    },
+
+    getAll: async (req, res) => {
+        try {
+            const { estado, busqueda } = req.query;
+            const prorrogas = await ProrrogaModel.getAll({ estado, busqueda });
+
+            res.json({
+                success: true,
+                data: prorrogas,
+                total: prorrogas.length
+            });
+
+        } catch (error) {
+            console.error('Error en getAll prórrogas:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    getById: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const prorroga = await ProrrogaModel.getById(id);
+
+            if (!prorroga) {
+                return res.status(404).json({ success: false, message: 'Prórroga no encontrada' });
+            }
+
+            res.json({ success: true, data: prorroga });
+
+        } catch (error) {
+            console.error('Error en getById prórroga:', error);
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 

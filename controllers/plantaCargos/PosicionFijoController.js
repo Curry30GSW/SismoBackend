@@ -53,18 +53,19 @@ async function generarCodigosPosicionSecuenciales(idCargoBase, idDepartamento, i
 
     for (let i = 0; i < cantidad; i++) {
         numeroActual++;
-        const nuevoNumero = numeroActual.toString().padStart(3, '0');
-        const posibleCodigo = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
 
-        // Si ya existe, seguimos buscando
-        while (codigosExistentes.has(posibleCodigo)) {
-            numeroActual++;
+        let codigoCandidato;
+        do {
             const nuevoNumero = numeroActual.toString().padStart(3, '0');
-            const posibleCodigo = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
-        }
+            codigoCandidato = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
 
-        codigos.push(posibleCodigo);
-        codigosExistentes.add(posibleCodigo);
+            if (codigosExistentes.has(codigoCandidato)) {
+                numeroActual++;
+            }
+        } while (codigosExistentes.has(codigoCandidato));
+
+        codigos.push(codigoCandidato);
+        codigosExistentes.add(codigoCandidato);
     }
 
     return codigos;
@@ -170,6 +171,13 @@ const posicionFijoController = {
                     console.error(`Error creando posición ${i + 1}:`, error);
                     errores.push({ index: i, error: error.message });
                 }
+            }
+
+            if (resultados.length === 0) {
+                return res.status(500).json({
+                    message: `No se pudo crear ninguna posición`,
+                    data: { exitosas: resultados, errores }
+                });
             }
 
             res.status(201).json({

@@ -147,26 +147,17 @@ const ascensoController = {
     // 5. OBTENER TODOS LOS ASCENSOS (PAGINADO)
     getAll: async (req, res) => {
         try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 100;
-            const offset = (page - 1) * limit;
 
-            const ascensos = await AscensoModel.getAll(limit, offset);
-            const total = await AscensoModel.getCount();
+            const ascensos = await AscensoModel.getAll();
 
             res.json({
                 success: true,
-                data: ascensos,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    totalPages: Math.ceil(total / limit)
-                }
+                data: ascensos
             });
 
         } catch (error) {
             console.error('Error en getAll ascenso:', error);
+
             res.status(500).json({
                 success: false,
                 message: error.message

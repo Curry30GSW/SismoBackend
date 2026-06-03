@@ -7,7 +7,10 @@ const PensionesModel = require('../../models/Contratos/PensionesModel');
 const CajaCompensacionModel = require('../../models/Contratos/CajaCompensacionModel');
 const NivelRiesgoModel = require('../../models/Contratos/NivelRiesgoModel');
 const PosicionCargoModel = require('../../models/plantaCargos/PosicionCargoModel');
+const PosicionFijoModel = require('../../models/plantaCargos/PosicionCargoFijoModel');
+const PosicionSenaModel = require('../../models/plantaCargos/PosicionCargoSenaModel');
 const CargoBaseModel = require('../../models/plantaCargos/CargoBaseModel');
+const MovimientoCargoModel = require('../../models/plantaCargos/MovimientoCargoModel');
 const pool = require('../../config/ConectDb');
 
 
@@ -27,7 +30,7 @@ async function generarNumeroContrato(tipoContrato) {
             prefijo = 'CMT';
             break;
         default:
-            prefijo = 'CSC'; // Contrato Sin Clasificar (por si no se reconoce el tipo)
+            prefijo = 'CSC';
     }
 
     const [result] = await pool.query(`
@@ -41,15 +44,14 @@ async function generarNumeroContrato(tipoContrato) {
     let ultimoNumero = 0;
 
     if (result.length > 0 && result[0].numero_contrato) {
-        // Extraer el número del último contrato (ej: CTF-001 -> 1)
         const partes = result[0].numero_contrato.split('-');
         if (partes.length >= 2) {
             ultimoNumero = parseInt(partes[1]) || 0;
         }
     }
 
-    // Generar el nuevo número (incrementar en 1)
-    const nuevoNumero = (ultimoNumero + 1).toString().padStart(3, '0');
+    // 🔥 Sin padding, solo el número natural
+    const nuevoNumero = ultimoNumero + 1;
 
     return `${prefijo}-${nuevoNumero}`;
 }
@@ -118,7 +120,7 @@ const contratoController = {
 
             const tipoDocumento = tipo || 'CC';
 
-            // Buscar funcionario
+            // 1. Buscar funcionario
             const funcionario = await FuncionarioModel.getByDocumentoCompleto(tipoDocumento, documento);
 
             if (!funcionario) {
@@ -128,32 +130,41 @@ const contratoController = {
                 });
             }
 
-            // Verificar si ya tiene contrato en el año actual
+            // 2. Verificar si tiene algún contrato ACTIVO o PRORROGADO (sin importar el año)
             const contratoActivo = await ContratoModel.getContratoActivoPorFuncionario(
-                funcionario.id_funcionario,
-                id_anio_legal
+                funcionario.id_funcionario
             );
 
             if (contratoActivo) {
                 return res.status(400).json({
                     success: false,
-                    message: `El funcionario ya tiene un contrato activo en el año ${contratoActivo.anio}`,
-                    data: { contrato_existente: contratoActivo }
+                    message: `El funcionario ya tiene un contrato ACTIVO (${contratoActivo.tipo_contrato}) en el año ${contratoActivo.anio}. Debe finalizarlo antes de crear uno nuevo.`,
+                    data: {
+                        contrato_existente: {
+                            id_contrato: contratoActivo.id_contrato,
+                            numero_contrato: contratoActivo.numero_contrato,
+                            tipo_contrato: contratoActivo.tipo_contrato,
+                            anio: contratoActivo.anio,
+                            estado: contratoActivo.estado,
+                            fecha_inicio: contratoActivo.fecha_inicio,
+                            fecha_fin: contratoActivo.fecha_fin
+                        }
+                    }
                 });
             }
 
-            // 🔥 Obtener posiciones disponibles (para INDEFINIDO)
+            // 3. Obtener posiciones disponibles para el año legal actual (SOLO para INDEFINIDO)
             const posicionesDisponibles = await PosicionCargoModel.getAllByAnio(id_anio_legal, {
                 estado: 'disponible'
             });
 
-            // 🔥 Obtener cargos base (para TERMINO_FIJO y APRENDIZ)
+            // 4. Obtener cargos base (para TERMINO_FIJO y APRENDIZ) - no dependen del año
             const cargosBase = await CargoBaseModel.getAll({ activo: true });
 
             res.json({
                 success: true,
                 data: {
-                    // Datos del funcionario (igual que antes)
+                    // Datos del funcionario
                     id_funcionario: funcionario.id_funcionario,
                     nombre_completo: `${funcionario.nombres} ${funcionario.apellidos}`,
                     numero_documento: funcionario.numero_documento,
@@ -191,7 +202,7 @@ const contratoController = {
                     nombre_caja: funcionario.nombre_caja,
                     codigo_caja: funcionario.codigo_caja,
 
-                    // 🔥 PARA INDEFINIDO: posiciones disponibles
+                    // 🔥 PARA INDEFINIDO: posiciones disponibles (filtradas por año)
                     posiciones_disponibles: posicionesDisponibles.map(p => ({
                         id_posicion: p.id_posicion,
                         codigo_posicion: p.codigo_posicion,
@@ -329,28 +340,32 @@ const contratoController = {
                 estado,
                 tipo_contrato,
                 id_funcionario,
+                id_anio_legal,
                 fecha_desde,
                 fecha_hasta,
-                page = 1,
-                limit = 20
+                busqueda,
+                orden = 'ASC',
+                ordenar_por = 'c.fecha_creacion'
             } = req.query;
 
             const filtros = {
                 estado,
                 tipo_contrato,
                 id_funcionario: id_funcionario ? parseInt(id_funcionario) : undefined,
+                id_anio_legal: id_anio_legal ? parseInt(id_anio_legal) : undefined,
                 fecha_desde,
-                fecha_hasta
+                fecha_hasta,
+                busqueda,
+                orden,
+                ordenar_por
             };
 
-            const contratos = await ContratoModel.getAll(filtros, page, limit);
+            const contratos = await ContratoModel.getAll(filtros);
 
             res.json({
                 success: true,
                 data: contratos,
-                total: contratos.length,
-                page: parseInt(page),
-                limit: parseInt(limit)
+                total: contratos.length
             });
 
         } catch (error) {
@@ -442,28 +457,135 @@ const contratoController = {
     },
 
     // ACCIONES SOBRE EL CONTRATO
-    finalizar: async (req, res) => {
+    finalizarContrato: async (req, res) => {
         try {
             const { id } = req.params;
-            const { fecha_fin, motivo } = req.body;
+            const { fecha_finalizacion } = req.body;
 
-            const contratoExistente = await ContratoModel.getById(id);
-            if (!contratoExistente) {
+            // 1. Obtener el contrato con todos sus datos
+            const contrato = await ContratoModel.getById(id);
+            if (!contrato) {
                 return res.status(404).json({
                     success: false,
                     message: 'Contrato no encontrado'
                 });
             }
 
-            await ContratoModel.finalizar(id, fecha_fin, motivo);
+            // 2. Validar que el contrato esté activo
+            if (contrato.estado !== 'ACTIVO' && contrato.estado !== 'PRORROGADO') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Solo se pueden finalizar contratos activos o prorrogados'
+                });
+            }
+
+            const fechaFin = fecha_finalizacion || new Date().toISOString().split('T')[0];
+
+            // 3. Actualizar el estado del contrato
+            await ContratoModel.update(id, {
+                estado: 'TERMINADO',
+                fecha_fin: fechaFin,
+                fecha_modificacion: new Date()
+            });
+
+            // 4. 🔥 MANEJAR LA POSICIÓN SEGÚN EL TIPO DE CONTRATO
+            const idPosicion = contrato.id_posicion;
+            const tipoContrato = contrato.tipo_contrato;
+
+            if (idPosicion) {
+                // 🔥 CASO APRENDIZ: Eliminar posición SENA completamente
+                if (tipoContrato === 'APRENDIZ') {
+
+                    // Verificar si la posición existe en la tabla SENA
+                    const posicionSena = await PosicionSenaModel.getById(idPosicion);
+
+                    if (posicionSena) {
+                        if (posicionSena.id_funcionario) {
+                            await PosicionSenaModel.desasignarAprendiz(idPosicion);
+                        }
+
+                        // Eliminar la posición SENA (soft delete)
+                        await PosicionSenaModel.delete(idPosicion, fechaFin);
+
+                        // Registrar el movimiento
+                        await MovimientoCargoModel.create({
+                            id_posicion: idPosicion,
+                            id_funcionario: contrato.id_funcionario,
+                            tipo_movimiento: 'ELIMINACION',
+                            fecha_movimiento: fechaFin,
+                            id_anio_legal: contrato.id_anio_legal,
+                            motivo: `Finalización de contrato APRENDIZ - ${fechaFin}`,
+                            usuario_sistema: req.user?.email || 'SISTEMA'
+                        });
+                    }
+                }
+                // 🔥 CASO TÉRMINO FIJO: Eliminar posición fija
+                else if (tipoContrato === 'TERMINO_FIJO') {
+                    const posicionFijo = await PosicionFijoModel.getById(idPosicion);
+
+                    if (posicionFijo) {
+                        await PosicionFijoModel.delete(idPosicion, fechaFin);
+
+                        await MovimientoCargoModel.create({
+                            id_posicion: idPosicion,
+                            id_funcionario: contrato.id_funcionario,
+                            tipo_movimiento: 'ELIMINACION',
+                            fecha_movimiento: fechaFin,
+                            id_anio_legal: contrato.id_anio_legal,
+                            motivo: `Finalización de contrato TÉRMINO FIJO - ${fechaFin}`,
+                            usuario_sistema: req.user?.email || 'SISTEMA'
+                        });
+                    }
+                }
+                // 🔥 CASO INDEFINIDO: Solo desasignar funcionario
+                else if (tipoContrato === 'INDEFINIDO') {
+                    await PosicionCargoModel.desasignarFuncionario(idPosicion);
+
+                    await MovimientoCargoModel.create({
+                        id_posicion: idPosicion,
+                        id_funcionario: contrato.id_funcionario,
+                        tipo_movimiento: 'DESASIGNACION',
+                        fecha_movimiento: fechaFin,
+                        id_anio_legal: contrato.id_anio_legal,
+                        motivo: `Finalización de contrato INDEFINIDO - ${fechaFin}`,
+                        usuario_sistema: req.user?.email || 'SISTEMA'
+                    });
+                }
+                // 🔥 CASO MEDIO_TIEMPO: Similar a término fijo
+                else if (tipoContrato === 'MEDIO_TIEMPO') {
+                    const posicionFijo = await PosicionFijoModel.getById(idPosicion);
+
+                    if (posicionFijo) {
+                        // Paso 1: Desasignar funcionario de la posición de medio tiempo
+                        if (posicionFijo.id_funcionario) {
+                            await PosicionFijoModel.desasignarFuncionario(idPosicion);
+                        }
+                        await PosicionFijoModel.delete(idPosicion, fechaFin);
+
+                        await MovimientoCargoModel.create({
+                            id_posicion: idPosicion,
+                            id_funcionario: contrato.id_funcionario,
+                            tipo_movimiento: 'ELIMINACION',
+                            fecha_movimiento: fechaFin,
+                            id_anio_legal: contrato.id_anio_legal,
+                            motivo: `Finalización de contrato MEDIO TIEMPO - ${fechaFin}`,
+                            usuario_sistema: req.user?.email || 'SISTEMA'
+                        });
+                    }
+                }
+            }
+
+            // 5. Obtener el contrato actualizado
+            const contratoActualizado = await ContratoModel.getById(id);
 
             res.json({
                 success: true,
-                message: 'Contrato finalizado exitosamente'
+                message: 'Contrato finalizado exitosamente',
+                data: contratoActualizado
             });
 
         } catch (error) {
-            console.error('Error en finalizar contrato:', error);
+            console.error('Error en finalizarContrato:', error);
             res.status(500).json({
                 success: false,
                 message: error.message

@@ -38,6 +38,14 @@ const prorrogaRoutes = require('./routes/Contratos/prorrogaRoutes');
 const preavisoNoProrrogaRoutes = require('./routes/Contratos/preavisoNoProrrogaRoutes');
 const ascensoRoutes = require('./routes/Contratos/ascensoRoutes');
 const encargaturaRoutes = require('./routes/Contratos/EncargaturaRoutes');
+const trasladoRoutes = require('./routes/Contratos/trasladoRoutes');
+const cambioFechasAprendizRoutes = require('./routes/Contratos/cambioFechasAprendizRoutes');
+// =============================================
+// IMPORTS DE RUTAS - PRINCIPALES
+// =============================================
+const documentoVerificacionRoutes = require('./routes/main/documentoVerificacionRoutes');
+const asociadoRoutes = require('./routes/main/asociadoRoutes');
+const authRoutes = require('./routes/main/authRoutes');
 
 dotenv.config({
     path: `.env.${process.env.NODE_ENV || 'development'}`
@@ -99,7 +107,15 @@ app.use('/api/prorrogas', prorrogaRoutes);
 app.use('/api/preavisos', preavisoNoProrrogaRoutes);
 app.use('/api/ascensos', ascensoRoutes);
 app.use('/api/encargaturas', encargaturaRoutes);
+app.use('/api/traslados', trasladoRoutes);
+app.use('/api/contratos', cambioFechasAprendizRoutes);
 
+// =============================================
+// RUTAS - PRINCIPALES
+// =============================================
+app.use('/api/documentos-verificacion', documentoVerificacionRoutes);
+app.use('/api/asociados', asociadoRoutes);
+app.use('/api/auth', authRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {

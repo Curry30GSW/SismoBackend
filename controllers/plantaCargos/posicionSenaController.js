@@ -15,7 +15,6 @@ async function generarCodigosPosicionSecuenciales(idCargoBase, idDepartamento, i
     const prefijoCargo = cargoBase.codigo_cargo;
     const codDepto = departamento.codigo_ext.toString().padStart(4, '0');
 
-    // Obtener posiciones existentes (activas e inactivas) para evitar duplicados
     const [todasLasPosiciones] = await pool.query(`
         SELECT codigo_posicion 
         FROM posiciones_cargo_sena 
@@ -26,7 +25,6 @@ async function generarCodigosPosicionSecuenciales(idCargoBase, idDepartamento, i
 
     const codigosExistentes = new Set(todasLasPosiciones.map(p => p.codigo_posicion));
 
-    // Obtener solo activas para el máximo número
     const posicionesActivas = await PosicionSenaModel.getAllByAnio(idAnioLegal, {
         id_cargo_base: idCargoBase,
         id_departamento: idDepartamento
@@ -52,18 +50,19 @@ async function generarCodigosPosicionSecuenciales(idCargoBase, idDepartamento, i
 
     for (let i = 0; i < cantidad; i++) {
         numeroActual++;
-        const nuevoNumero = numeroActual.toString().padStart(3, '0');
-        const posibleCodigo = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
 
-        // Si ya existe, seguimos buscando
-        while (codigosExistentes.has(posibleCodigo)) {
-            numeroActual++;
+        let codigoCandidato;
+        do {
             const nuevoNumero = numeroActual.toString().padStart(3, '0');
-            const posibleCodigo = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
-        }
+            codigoCandidato = `${prefijoCargo}-${codDepto}-${nuevoNumero}-${anioLegal.anio}`.toUpperCase();
 
-        codigos.push(posibleCodigo);
-        codigosExistentes.add(posibleCodigo);
+            if (codigosExistentes.has(codigoCandidato)) {
+                numeroActual++;
+            }
+        } while (codigosExistentes.has(codigoCandidato));
+
+        codigos.push(codigoCandidato);
+        codigosExistentes.add(codigoCandidato);
     }
 
     return codigos;
