@@ -108,7 +108,7 @@ app.use('/api/preavisos', preavisoNoProrrogaRoutes);
 app.use('/api/ascensos', ascensoRoutes);
 app.use('/api/encargaturas', encargaturaRoutes);
 app.use('/api/traslados', trasladoRoutes);
-app.use('/api/contratos', cambioFechasAprendizRoutes);
+app.use('/api/contratos-sena', cambioFechasAprendizRoutes);
 
 // =============================================
 // RUTAS - PRINCIPALES

@@ -334,6 +334,8 @@ const ContratoModel = {
                     id_anio_legal,
                     tipo_contrato,
                     numero_contrato,
+                    numero_contrato_ant,
+                    fecha_inicio_contrato_ant,
                     fecha_inicio,
                     fecha_fin,
                     termino_inicial,
@@ -356,13 +358,15 @@ const ContratoModel = {
                     electiva_fin,
                     practica_inicio,
                     practica_fin
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 data.id_funcionario,
                 data.id_posicion,
                 data.id_anio_legal,
                 data.tipo_contrato,
                 data.numero_contrato || null,
+                data.numero_contrato_ant || null,
+                data.fecha_inicio_contrato_ant || null,
                 data.fecha_inicio,
                 data.fecha_fin || null,
                 data.termino_inicial || null,
@@ -442,6 +446,8 @@ const ContratoModel = {
             c.id_contrato,
             c.tipo_contrato,
             c.numero_contrato,
+            c.numero_contrato_ant,
+            c.fecha_inicio_contrato_ant,
             c.fecha_inicio,
             c.fecha_fin,
             c.termino_inicial,
