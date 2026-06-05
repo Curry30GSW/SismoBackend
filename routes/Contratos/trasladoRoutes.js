@@ -1,24 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const trasladoController = require('../../controllers/Contratos/TrasladoController');
-
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 // GET /api/traslados/funcionario/:id_funcionario - Obtener traslados por funcionario
-router.get('/funcionario/:id_funcionario', trasladoController.getByFuncionario);
+router.get('/funcionario/:id_funcionario', authMiddleware, trasladoController.getByFuncionario);
 
 // =============================================
 // RUTAS GENÉRICAS
 // =============================================
 
 // GET /api/traslados - Obtener todos los traslados
-router.get('/', trasladoController.getAll);
+router.get('/', authMiddleware, trasladoController.getAll);
 
 // GET /api/traslados/:id - Obtener traslado por ID
-router.get('/:id', trasladoController.getById);
+router.get('/:id', authMiddleware, trasladoController.getById);
 
 // POST /api/traslados - Crear nuevo traslado
-router.post('/', trasladoController.create);
+router.post('/', authMiddleware, trasladoController.create);
 
-router.put('/:id/finalizar', trasladoController.finalizar);
+router.put('/:id/finalizar', authMiddleware, trasladoController.finalizar);
 
 module.exports = router;

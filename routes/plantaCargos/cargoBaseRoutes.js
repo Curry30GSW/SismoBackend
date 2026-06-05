@@ -1,23 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const cargoBaseController = require('../../controllers/plantaCargos/cargoBaseController');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
-// NOTA: Aquí NO va /api, solo el recurso
-// La ruta base será /cargos-base
 
 // CRUD Básico
-router.post('/', cargoBaseController.create);
-router.get('/', cargoBaseController.getAll);
-router.get('/:id', cargoBaseController.getById);
-router.put('/:id', cargoBaseController.update);
-router.delete('/:id', cargoBaseController.delete);
+router.post('/', authMiddleware, cargoBaseController.create);
+router.get('/', authMiddleware, cargoBaseController.getAll);
+router.get('/:id', authMiddleware, cargoBaseController.getById);
+router.put('/:id', authMiddleware, cargoBaseController.update);
+router.delete('/:id', authMiddleware, cargoBaseController.delete);
 
 // Rutas específicas
-router.get('/nivel/:nivel', cargoBaseController.getByNivel);
-router.get('/directores/agencia', cargoBaseController.getDirectoresAgencia);
-router.get('/with/salario/:id_anio_legal', cargoBaseController.getWithSalarioHistorico);
-router.get('/with/disponibilidad/:id_anio_legal', cargoBaseController.getWithDisponibilidad);
-router.patch('/:id/activo', cargoBaseController.setActivo);
-router.get('/codigo/:codigo', cargoBaseController.getByCodigo);
+router.get('/nivel/:nivel', authMiddleware, cargoBaseController.getByNivel);
+router.get('/directores/agencia', authMiddleware, cargoBaseController.getDirectoresAgencia);
+router.get('/with/salario/:id_anio_legal', authMiddleware, cargoBaseController.getWithSalarioHistorico);
+router.get('/with/disponibilidad/:id_anio_legal', authMiddleware, cargoBaseController.getWithDisponibilidad);
+router.patch('/:id/activo', authMiddleware, cargoBaseController.setActivo);
+router.get('/codigo/:codigo', authMiddleware, cargoBaseController.getByCodigo);
 
 module.exports = router;

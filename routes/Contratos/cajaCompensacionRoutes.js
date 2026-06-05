@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const cajaCompensacionController = require('../../controllers/Contratos/cajaCompensacionController');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
-router.post('/', cajaCompensacionController.create);
-router.get('/', cajaCompensacionController.getAll);
-router.get('/codigo/:codigo', cajaCompensacionController.getByCodigo);
-router.get('/:id', cajaCompensacionController.getById);
-router.put('/:id', cajaCompensacionController.update);
-router.delete('/:id', cajaCompensacionController.delete);
+router.post('/', authMiddleware, cajaCompensacionController.create);
+router.get('/', authMiddleware, cajaCompensacionController.getAll);
+router.get('/codigo/:codigo', authMiddleware, cajaCompensacionController.getByCodigo);
+router.get('/:id', authMiddleware, cajaCompensacionController.getById);
+router.put('/:id', authMiddleware, cajaCompensacionController.update);
+router.delete('/:id', authMiddleware, cajaCompensacionController.delete);
 
 module.exports = router;

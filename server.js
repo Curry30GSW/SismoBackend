@@ -114,7 +114,6 @@ app.use('/api/contratos-sena', cambioFechasAprendizRoutes);
 // RUTAS - PRINCIPALES
 // =============================================
 app.use('/api/documentos-verificacion', documentoVerificacionRoutes);
-app.use('/api/asociados', asociadoRoutes);
 app.use('/api/auth', authRoutes);
 
 

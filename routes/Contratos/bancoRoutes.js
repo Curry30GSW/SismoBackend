@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const bancoController = require('../../controllers/Contratos/bancoController');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
-router.post('/', bancoController.create);
-router.get('/', bancoController.getAll);
-router.get('/:id', bancoController.getById);
-router.put('/:id', bancoController.update);
-router.delete('/:id', bancoController.delete);
+router.post('/', authMiddleware, bancoController.create);
+router.get('/', authMiddleware, bancoController.getAll);
+router.get('/:id', authMiddleware, bancoController.getById);
+router.put('/:id', authMiddleware, bancoController.update);
+router.delete('/:id', authMiddleware, bancoController.delete);
 
 module.exports = router;
