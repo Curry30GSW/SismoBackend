@@ -120,6 +120,46 @@ const documentoVerificacionController = {
                 message: error.message
             });
         }
+    },
+
+    verificarPublico: async (req, res) => {
+        try {
+            const { codigo } = req.params;
+
+            const infoVerificacion = await DocumentoVerificacionModel.verificar(codigo);
+
+            if (!infoVerificacion) {
+                return res.status(404).json({
+                    success: false,
+                    message: '❌ Documento no válido o código inexistente'
+                });
+            }
+
+            // Obtener datos completos del documento
+            const documentoCompleto = await DocumentoVerificacionModel.obtenerDocumentoCompleto(
+                infoVerificacion.tipo_documento,
+                infoVerificacion.id_documento
+            );
+
+            res.json({
+                success: true,
+                data: {
+                    codigo: infoVerificacion.codigo,
+                    tipo_documento: infoVerificacion.tipo_documento,
+                    fecha_emision: infoVerificacion.fecha_emision,
+                    documento: documentoCompleto,
+                    es_valido: true
+                },
+                message: '✅ Documento auténtico'
+            });
+
+        } catch (error) {
+            console.error('Error en verificarPublico:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
     }
 };
 

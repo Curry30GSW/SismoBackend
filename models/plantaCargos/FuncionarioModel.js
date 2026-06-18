@@ -28,20 +28,32 @@ const FuncionarioModel = {
             }
 
             const query = `
-                INSERT INTO funcionarios (
-                    tipo_documento,
-                    numero_documento,
-                    nombres,
-                    apellidos,
-                    sexo,
-                    fecha_nacimiento,
-                    edad,
-                    correo_electronico,
-                    telefono,
-                    fecha_ingreso,
-                    activo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
+            INSERT INTO funcionarios (
+                tipo_documento,
+                numero_documento,
+                nombres,
+                apellidos,
+                sexo,
+                fecha_nacimiento,
+                lugar_expedicion,
+                edad,
+                correo_electronico,
+                telefono,
+                fecha_ingreso,
+                fecha_retiro,
+                activo,
+                direccion,
+                lugar_nacimiento,
+                barrio,
+                id_banco,
+                tipo_cuenta,
+                numero_cuenta_bancaria,
+                id_eps,
+                id_cesantia,
+                id_pension,
+                id_caja_compensacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
             const values = [
                 data.tipo_documento,
@@ -50,11 +62,23 @@ const FuncionarioModel = {
                 data.apellidos,
                 data.sexo || null,
                 data.fecha_nacimiento || null,
+                data.lugar_expedicion || null,
                 edad,
                 data.correo_electronico || null,
                 data.telefono || null,
                 data.fecha_ingreso || new Date(),
-                data.activo !== undefined ? data.activo : true
+                data.fecha_retiro || null,
+                data.activo !== undefined ? data.activo : 1,
+                data.direccion || null,
+                data.lugar_nacimiento || null,
+                data.barrio || null,
+                data.id_banco || null,
+                data.tipo_cuenta || null,
+                data.numero_cuenta_bancaria || null,
+                data.id_eps || null,
+                data.id_cesantia || null,
+                data.id_pension || null,
+                data.id_caja_compensacion || null
             ];
 
             const [result] = await connection.query(query, values);
@@ -283,27 +307,93 @@ const FuncionarioModel = {
 
     // Actualizar funcionario
     update: async (id, data) => {
-        const query = `
+        const connection = await pool.getConnection();
+        try {
+            // Verificar que no exista otro funcionario con el mismo documento (excluyendo el actual)
+            const [existente] = await connection.query(
+                'SELECT id_funcionario FROM funcionarios WHERE tipo_documento = ? AND numero_documento = ? AND id_funcionario != ?',
+                [data.tipo_documento, data.numero_documento, id]
+            );
+
+            if (existente.length > 0) {
+                throw new Error('Ya existe otro funcionario con este documento');
+            }
+
+            // Calcular edad si se proporciona fecha de nacimiento
+            let edad = data.edad || 0;
+            if (data.fecha_nacimiento && !data.edad) {
+                const fechaNac = new Date(data.fecha_nacimiento);
+                const hoy = new Date();
+                edad = hoy.getFullYear() - fechaNac.getFullYear();
+                const m = hoy.getMonth() - fechaNac.getMonth();
+                if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+                    edad--;
+                }
+            }
+
+            const query = `
             UPDATE funcionarios SET
+                tipo_documento = ?,
+                numero_documento = ?,
                 nombres = ?,
                 apellidos = ?,
+                sexo = ?,
                 fecha_nacimiento = ?,
+                lugar_expedicion = ?,
+                edad = ?,
                 correo_electronico = ?,
-                telefono = ?
+                telefono = ?,
+                fecha_ingreso = ?,
+                fecha_retiro = ?,
+                activo = ?,
+                direccion = ?,
+                lugar_nacimiento = ?,
+                barrio = ?,
+                id_banco = ?,
+                tipo_cuenta = ?,
+                numero_cuenta_bancaria = ?,
+                id_eps = ?,
+                id_cesantia = ?,
+                id_pension = ?,
+                id_caja_compensacion = ?
             WHERE id_funcionario = ?
         `;
 
-        const values = [
-            data.nombres,
-            data.apellidos,
-            data.fecha_nacimiento || null,
-            data.correo_electronico || null,
-            data.telefono || null,
-            id
-        ];
+            const values = [
+                data.tipo_documento,
+                data.numero_documento,
+                data.nombres,
+                data.apellidos,
+                data.sexo || null,
+                data.fecha_nacimiento || null,
+                data.lugar_expedicion || null,
+                edad,
+                data.correo_electronico || null,
+                data.telefono || null,
+                data.fecha_ingreso || null,
+                data.fecha_retiro || null,
+                data.activo !== undefined ? data.activo : 1,
+                data.direccion || null,
+                data.lugar_nacimiento || null,
+                data.barrio || null,
+                data.id_banco || null,
+                data.tipo_cuenta || null,
+                data.numero_cuenta_bancaria || null,
+                data.id_eps || null,
+                data.id_cesantia || null,
+                data.id_pension || null,
+                data.id_caja_compensacion || null,
+                id
+            ];
 
-        const [result] = await pool.query(query, values);
-        return result;
+            const [result] = await connection.query(query, values);
+            return { id_funcionario: id, ...data };
+
+        } catch (error) {
+            throw error;
+        } finally {
+            connection.release();
+        }
     },
 
     // Retirar funcionario (desactivar)

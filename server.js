@@ -117,6 +117,8 @@ app.use('/api/documentos-verificacion', documentoVerificacionRoutes);
 app.use('/api/auth', authRoutes);
 
 
+app.use('/api/asociadosQuin', asociadoRoutes);
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
     Servidor iniciado correctamente

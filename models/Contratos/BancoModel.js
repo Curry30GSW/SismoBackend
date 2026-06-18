@@ -4,14 +4,12 @@ const BancoModel = {
     create: async (data) => {
         const query = `
             INSERT INTO bancos (
-                nombre_banco,
-                activo
-            ) VALUES (?, ?)
+                nombre_banco
+            ) VALUES (?)
         `;
 
         const values = [
-            data.nombre_banco,
-            data.activo !== undefined ? data.activo : true
+            data.nombre_banco
         ];
 
         const [result] = await pool.query(query, values);
@@ -36,14 +34,12 @@ const BancoModel = {
     update: async (id, data) => {
         const query = `
             UPDATE bancos SET
-                nombre_banco = ?,
-                activo = ?
+                nombre_banco = ?
             WHERE id_banco = ?
         `;
 
         const values = [
             data.nombre_banco,
-            data.activo,
             id
         ];
 

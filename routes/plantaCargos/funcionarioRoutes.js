@@ -13,6 +13,8 @@ router.post('/', authMiddleware, funcionarioController.create);
 router.get('/:id', authMiddleware, funcionarioController.getById);
 router.get('/:id/historial', authMiddleware, funcionarioController.getHistorialPosiciones);
 router.put('/:id/retire', authMiddleware, funcionarioController.retire);
+router.put('/:id', authMiddleware, funcionarioController.update);
 router.put('/:id/transfer', authMiddleware, funcionarioController.transfer);
+router.get('/:id', authMiddleware, funcionarioController.update);
 router.patch('/:id/deactivate', authMiddleware, funcionarioController.deactivate);
 module.exports = router;

@@ -345,7 +345,70 @@ const funcionarioController = {
                 error: error.message
             });
         }
-    }
+    },
+
+    update: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const data = req.body;
+
+            // Validar que el ID sea válido
+            if (!id || isNaN(parseInt(id))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'ID de funcionario inválido'
+                });
+            }
+
+            // Verificar que el funcionario existe
+            const existente = await FuncionarioModel.getById(id);
+            if (!existente) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Funcionario no encontrado'
+                });
+            }
+
+            // Validaciones básicas
+            if (!data.tipo_documento || !data.numero_documento || !data.nombres || !data.apellidos) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Tipo documento, número documento, nombres y apellidos son requeridos'
+                });
+            }
+
+            if (!data.numero_documento.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El número de documento es requerido'
+                });
+            }
+
+            // Actualizar funcionario
+            const result = await FuncionarioModel.update(id, data);
+
+            res.json({
+                success: true,
+                message: 'Funcionario actualizado exitosamente',
+                data: result
+            });
+
+        } catch (error) {
+            console.error('Error en update:', error);
+
+            if (error.message.includes('Ya existe otro funcionario')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Error al actualizar funcionario'
+            });
+        }
+    },
 
 };
 
