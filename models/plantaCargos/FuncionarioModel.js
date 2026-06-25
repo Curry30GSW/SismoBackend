@@ -7,8 +7,8 @@ const FuncionarioModel = {
         try {
             // Verificar que no exista otro funcionario con el mismo documento
             const [existente] = await connection.query(
-                'SELECT id_funcionario FROM funcionarios WHERE tipo_documento = ? AND numero_documento = ?',
-                [data.tipo_documento, data.numero_documento]
+                'SELECT id_funcionario FROM funcionarios WHERE numero_documento = ?',
+                [data.numero_documento]
             );
 
             if (existente.length > 0) {
@@ -94,28 +94,49 @@ const FuncionarioModel = {
     // Obtener todos los funcionarios activos
     getAll: async (filtros = {}) => {
         let query = `
-    SELECT 
-        f.*,
-        pc.id_posicion,
-        pc.codigo_posicion,
-        pc.sede_ubicacion,
-        pc.salario_base as salario_posicion,
-        pc.aplica_auxilio_transporte,
-        pc.bonificacion as bonificacion_posicion,
-        pc.encargado,
-        cb.nombre_cargo,
-        cb.codigo_cargo,
-        d.nombre_departamento,
-        al.anio
-    FROM funcionarios f
-    LEFT JOIN posiciones_cargo pc ON f.id_funcionario = pc.id_funcionario 
-        AND pc.id_anio_legal = ? 
-        AND pc.activo = true
-    LEFT JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
-    LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
-    LEFT JOIN anios_legales al ON pc.id_anio_legal = al.id_anio_legal
-    WHERE 1=1
-`;
+            SELECT 
+                f.*,
+                pc.id_posicion,
+                pc.codigo_posicion,
+                pc.sede_ubicacion,
+                pc.salario_base as salario_posicion,
+                pc.aplica_auxilio_transporte,
+                pc.bonificacion as bonificacion_posicion,
+                pc.encargado,
+                cb.nombre_cargo,
+                cb.codigo_cargo,
+                d.nombre_departamento,
+                al.anio,
+            
+                b.nombre_banco,
+                f.tipo_cuenta,
+                f.numero_cuenta_bancaria,
+            
+                e.nombre_eps,
+                e.nombre_aporte as eps_nombre_aporte,
+            
+                c.nombre_cesantia,
+                c.nombre_aporte as cesantia_nombre_aporte,
+
+                p.nombre_pension,
+                p.nombre_aporte as pension_nombre_aporte,
+
+                cc.nombre_caja
+            FROM funcionarios f
+            LEFT JOIN posiciones_cargo pc ON f.id_funcionario = pc.id_funcionario 
+                AND pc.id_anio_legal = ? 
+                AND pc.activo = true
+            LEFT JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
+            LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
+            LEFT JOIN anios_legales al ON pc.id_anio_legal = al.id_anio_legal
+
+            LEFT JOIN bancos b ON f.id_banco = b.id_banco
+            LEFT JOIN eps e ON f.id_eps = e.id_eps
+            LEFT JOIN cesantias c ON f.id_cesantia = c.id_cesantia
+            LEFT JOIN pensiones p ON f.id_pension = p.id_pension
+            LEFT JOIN caja_compensacion cc ON f.id_caja_compensacion = cc.id_caja
+            WHERE 1=1
+            `;
         let params = [filtros.id_anio_legal];
 
         // Filtro por activo/inactivo

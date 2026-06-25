@@ -558,6 +558,8 @@ const ContratoModel = {
         try {
             await connection.beginTransaction();
 
+            const estadoContrato = data.estado || 'ACTIVO';
+
             // 1. Insertar contrato
             const [result] = await connection.query(`
                 INSERT INTO contratos (
@@ -610,7 +612,7 @@ const ContratoModel = {
                 data.ciudad_contratacion || 'CALI',
                 data.arl || null,
                 data.id_riesgo || null,
-                'ACTIVO',
+                estadoContrato,
                 data.numero_grupo || null,
                 data.centro_formacion || null,
                 data.especialidad || null,
@@ -1138,13 +1140,20 @@ const ContratoModel = {
             // 6. INSERTAR CLÁUSULAS DEL CONTRATO INDEFINIDO
             const datosAprendiz = {};
 
+            const funcionarioData = {
+                numero_cuenta: contratoActual[0].numero_cuenta_bancaria || 'ERROR',
+                nombre_banco: contratoActual[0].nombre_banco || 'ERROR',
+                tipo_cuenta: contratoActual[0].tipo_cuenta || 'AHORROS'
+            };
+
             const clausulas = obtenerClausulasPorTipo(
                 'INDEFINIDO',
                 fechaInicio,
                 null,
                 null,
                 posicion[0].nombre_cargo,
-                datosAprendiz
+                datosAprendiz,
+                funcionarioData
             );
 
             for (const clausula of clausulas) {

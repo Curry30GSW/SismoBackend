@@ -26,7 +26,11 @@ const ascensoController = {
                 id_contrato_anterior,
                 id_contrato_nuevo,
                 id_posicion_nueva,
+                id_posicion_anterior,
+                id_funcionario,
+                estado,
                 fecha_ascenso,
+                fecha_efectiva,
                 usuario_creacion
             } = req.body;
 
@@ -66,13 +70,17 @@ const ascensoController = {
             // Generar código de ascenso
             const codigoAscenso = await AscensoModel.generarCodigoAscenso();
 
-            // Crear el registro
+            // Crear el registro con TODOS los campos
             const result = await AscensoModel.create({
                 codigo_ascenso: codigoAscenso,
                 id_contrato_anterior,
                 id_contrato_nuevo,
                 id_posicion_nueva,
+                id_posicion_anterior: id_posicion_anterior || null,
+                id_funcionario: id_funcionario || null,
+                estado: estado || 'PENDIENTE',
                 fecha_ascenso: fecha_ascenso || new Date().toISOString().split('T')[0],
+                fecha_efectiva: fecha_efectiva || fecha_ascenso || new Date().toISOString().split('T')[0],
                 usuario_creacion: usuario_creacion || req.user?.email || 'SISTEMA'
             });
 

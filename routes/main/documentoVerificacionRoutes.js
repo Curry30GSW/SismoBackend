@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const documentoVerificacionController = require('../../controllers/main/documentoVerificacionController');
-const { authMiddleware } = require('../../middlewares/authMiddleware');
+
 
 
 router.get('/public/verificar/:codigo', documentoVerificacionController.verificarPublico);

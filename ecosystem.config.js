@@ -4,7 +4,7 @@ module.exports = {
             name: 'apitth',
             script: './server.js',
             instances: 1,                    // Para desarrollo, 1 es suficiente
-            exec_mode: 'cluster',              // Modo fork (cluster para más instancias)
+            exec_mode: 'cluster',
             autorestart: true,
             watch: false,                   // Importante: false en producción
             max_memory_restart: '1G',
@@ -14,8 +14,8 @@ module.exports = {
 
             // Variables de entorno por defecto
             env: {
-                NODE_ENV: 'development',
-                PORT: 5019
+                NODE_ENV: 'production',
+                PORT: 5008
             },
 
             // Entorno de desarrollo

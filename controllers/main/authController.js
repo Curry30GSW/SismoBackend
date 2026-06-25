@@ -90,12 +90,12 @@ const authController = {
             { expiresIn: '7d' }
         );
 
-        const isProduction = process.env.NODE_ENV === 'production';
+
 
         // 🍪 Configurar cookies HttpOnly
         res.cookie('access_token', accessToken, {
             httpOnly: true,
-            secure: isProduction,
+            secure: false,
             sameSite: 'lax',
             maxAge: 2 * 60 * 60 * 1000, // 2 horas
             path: '/'
@@ -103,7 +103,7 @@ const authController = {
 
         res.cookie('refresh_token', refreshToken, {
             httpOnly: true,
-            secure: isProduction,
+            secure: false,
             sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
             path: '/'
@@ -112,7 +112,7 @@ const authController = {
         // Cookie no HttpOnly para saber el usuario en frontend
         res.cookie('usuario', usuarioValido.usuario, {
             httpOnly: false,
-            secure: isProduction,
+            secure: false,
             sameSite: 'lax',
             maxAge: 2 * 60 * 60 * 1000,
             path: '/'
@@ -195,11 +195,10 @@ const authController = {
                 { expiresIn: '2h' }
             );
 
-            const isProduction = process.env.NODE_ENV === 'production';
 
             res.cookie('access_token', newAccessToken, {
                 httpOnly: true,
-                secure: isProduction,
+                secure: false,
                 sameSite: 'lax',
                 maxAge: 2 * 60 * 60 * 1000,
                 path: '/'
@@ -207,7 +206,7 @@ const authController = {
 
             res.cookie('usuario', usuario.usuario, {
                 httpOnly: false,
-                secure: isProduction,
+                secure: false,
                 sameSite: 'lax',
                 maxAge: 2 * 60 * 60 * 1000,
                 path: '/'

@@ -40,6 +40,7 @@ const ascensoRoutes = require('./routes/Contratos/ascensoRoutes');
 const encargaturaRoutes = require('./routes/Contratos/EncargaturaRoutes');
 const trasladoRoutes = require('./routes/Contratos/trasladoRoutes');
 const cambioFechasAprendizRoutes = require('./routes/Contratos/cambioFechasAprendizRoutes');
+const nombramientosRoutes = require('./routes/Contratos/nombramientoRoutes');
 // =============================================
 // IMPORTS DE RUTAS - PRINCIPALES
 // =============================================
@@ -109,6 +110,7 @@ app.use('/api/ascensos', ascensoRoutes);
 app.use('/api/encargaturas', encargaturaRoutes);
 app.use('/api/traslados', trasladoRoutes);
 app.use('/api/contratos-sena', cambioFechasAprendizRoutes);
+app.use('/api/nombramientos', nombramientosRoutes);
 
 // =============================================
 // RUTAS - PRINCIPALES
@@ -126,3 +128,10 @@ app.listen(PORT, '0.0.0.0', () => {
     Puerto: ${PORT}
     `);
 });
+
+try {
+    require('./jobs');
+    console.log('✅ Jobs programados iniciados correctamente');
+} catch (error) {
+    console.error('❌ Error al iniciar jobs:', error);
+}
