@@ -591,8 +591,11 @@ const ContratoModel = {
                     electiva_inicio,
                     electiva_fin,
                     practica_inicio,
-                    practica_fin
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    practica_fin,
+                    numero_cuenta_bancaria,
+                    nombre_banco,
+                    tipo_cuenta
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 data.id_funcionario,
                 data.id_posicion,
@@ -622,7 +625,10 @@ const ContratoModel = {
                 data.electiva_inicio || null,
                 data.electiva_fin || null,
                 data.practica_inicio || null,
-                data.practica_fin || null
+                data.practica_fin || null,
+                data.numero_cuenta_bancaria || null,
+                data.nombre_banco || null,
+                data.tipo_cuenta || 'AHORROS'
             ]);
 
             const idContrato = result.insertId;
@@ -644,9 +650,9 @@ const ContratoModel = {
 
             // ============ DATOS DEL FUNCIONARIO ============
             const funcionarioData = {
-                numero_cuenta: data.numero_cuenta || null,
+                numero_cuenta: data.numero_cuenta_bancaria || null,
                 nombre_banco: data.nombre_banco || null,
-                tipo_cuenta: data.tipo_cuenta || null,
+                tipo_cuenta: data.tipo_cuenta || 'AHORROS'
             };
 
             // 2. Insertar cláusulas según tipo de contrato
@@ -1090,26 +1096,29 @@ const ContratoModel = {
 
             // 5. Crear nuevo contrato indefinido
             const queryNuevoContrato = `
-            INSERT INTO contratos (
-                numero_contrato,
-                tipo_contrato,
-                fecha_inicio,
-                fecha_creacion,
-                cargo,
-                salario,
-                lugar_labores,
-                ciudad_contratacion,
-                arl,
-                id_riesgo,
-                horas_laborales,
-                periodo_pago,
-                estado,
-                id_funcionario,
-                id_posicion,
-                id_anio_legal,
-                usuario_creacion
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+                INSERT INTO contratos (
+                    numero_contrato,
+                    tipo_contrato,
+                    fecha_inicio,
+                    fecha_creacion,
+                    cargo,
+                    salario,
+                    lugar_labores,
+                    ciudad_contratacion,
+                    arl,
+                    id_riesgo,
+                    horas_laborales,
+                    periodo_pago,
+                    estado,
+                    id_funcionario,
+                    id_posicion,
+                    id_anio_legal,
+                    usuario_creacion,
+                    numero_cuenta_bancaria,
+                    nombre_banco,
+                    tipo_cuenta
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
 
             const fechaActual = new Date();
             const fechaInicio = contratoActual[0].fecha_inicio || fechaActual;
@@ -1131,7 +1140,10 @@ const ContratoModel = {
                 idFuncionario,
                 idPosicion,
                 idAnioLegal,
-                usuarioCreacion
+                usuarioCreacion,
+                contratoActual[0].numero_cuenta_bancaria || 'ERROR',
+                contratoActual[0].nombre_banco || 'ERROR',
+                contratoActual[0].tipo_cuenta || 'AHORROS'
             ];
 
             const [resultadoInsert] = await connection.query(queryNuevoContrato, valoresNuevoContrato);
