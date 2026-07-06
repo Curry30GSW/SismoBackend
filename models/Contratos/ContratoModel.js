@@ -25,7 +25,7 @@ const formatearFechaLarga = (fechaStr) => {
     }
 };
 
-function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}, funcionarioData = {}) {
+function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}, funcionarioData = {}, confianzaManejo = false) {
 
     const esAprendiz = tipoContrato === 'APRENDIZ';
 
@@ -41,10 +41,14 @@ function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoIni
             tipo_cuenta: funcionarioData?.tipo_cuenta || 'AHORROS'
         };
 
-    const clausulasComunes = [
+    let clausulasComunes = [
         {
             titulo: 'PRIMERA. OBJETO',
-            contenido: `EL EMPLEADOR contrata los servicios personales del TRABAJADOR para desempeñar el cargo de ${cargo || 'el señalado en el encabezado'} ejecutando las funciones propias del mismo, así como aquellas que le sean asignadas por EL EMPLEADOR conforme a sus necesidades y dentro del marco legal.
+            contenido: confianzaManejo
+                ? `EL EMPLEADOR contrata los servicios personales del TRABAJADOR para desempeñar el cargo de ${cargo || 'el señalado en el encabezado'} el cual es considerado de dirección, confianza y manejo, llevando a cabo la ejecución de las tareas ordinarias y anexas al mencionado cargo, de conformidad con las órdenes, reglamentos e instrucciones que le impartan el EMPLEADOR, o sus representantes, observando en su cumplimiento la diligencia y el cuidado necesarios. EL TRABAJADOR se compromete a realizar todas las funciones inherentes a dicho cargo, pero no limitándose a la gestión de personal, desarrollo organizacional, y cumplimiento de políticas internas.
+
+PARÁGRAFO PRIMERO. No obstante que la actividad para la cual el trabajador está destinado a ejecutar su labor se encuentra predeterminado y establecido en el cabezote del presente contrato, las partes estipulan de común acuerdo que se reservan la posibilidad que el trabajador pueda apoyar si así lo requiere el empleador, otras funciones, siempre y cuando haya previa formalización.`
+                : `EL EMPLEADOR contrata los servicios personales del TRABAJADOR para desempeñar el cargo de ${cargo || 'el señalado en el encabezado'} ejecutando las funciones propias del mismo, así como aquellas que le sean asignadas por EL EMPLEADOR conforme a sus necesidades y dentro del marco legal.
 
 PARÁGRAFO PRIMERO. No obstante que la actividad para la cual el trabajador está destinado a ejecutar su labor se encuentra predeterminado y establecido en el cabezote del presente contrato, las partes estipulan de común acuerdo que se reservan la posibilidad que el trabajador pueda apoyar si así lo requiere el empleador, otras funciones, siempre y cuando haya previa formalización.`,
             orden: 1
@@ -62,7 +66,9 @@ PARÁGRAFO TERCERO. PAGOS QUE NO CONSTITUYEN SALARIO: Para los efectos del Art. 
         },
         {
             titulo: 'QUINTA. HORARIO',
-            contenido: `El TRABAJADOR se someterá a la jornada laboral de acuerdo con las especificaciones dadas por EL EMPLEADOR, esto conforme a lo previsto en el Código Sustantivo del Trabajo, la Ley 2101 de 2021 y la Ley 2466 de 2025, y modificaciones sucesivas.`,
+            contenido: confianzaManejo
+                ? `El cargo de ${cargo || 'el señalado en el encabezado'} es de dirección, confianza y manejo, lo que implica que EL TRABAJADOR tendrá la responsabilidad de tomar decisiones estratégicas que afecten directamente los intereses de la empresa. Debido a la naturaleza de sus funciones, EL TRABAJADOR no estará sujeto a la jornada laboral máxima ni al pago de horas extras.`
+                : `El TRABAJADOR se someterá a la jornada laboral de acuerdo con las especificaciones dadas por EL EMPLEADOR, esto conforme a lo previsto en el Código Sustantivo del Trabajo, la Ley 2101 de 2021 y la Ley 2466 de 2025, y modificaciones sucesivas.`,
             orden: 5
         },
         {
@@ -663,7 +669,8 @@ const ContratoModel = {
                 data.termino_inicial,
                 data.cargo,
                 datosAprendiz,
-                funcionarioData
+                funcionarioData,
+                data.confianza_manejo || false
             );
 
             for (const clausula of clausulas) {
@@ -712,6 +719,8 @@ const ContratoModel = {
             c.electiva_fin,
             c.practica_inicio,
             c.practica_fin,
+            c.motivo_anulado,
+            c.fecha_modificacion,
             
             -- Datos del funcionario
             f.id_funcionario,
@@ -1165,7 +1174,8 @@ const ContratoModel = {
                 null,
                 posicion[0].nombre_cargo,
                 datosAprendiz,
-                funcionarioData
+                funcionarioData,
+                data.confianza_manejo || false
             );
 
             for (const clausula of clausulas) {
@@ -1260,9 +1270,55 @@ const ContratoModel = {
         }
     },
 
+    anular: async (id, data) => {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const { motivo, usuario_anulacion } = data;
+
+            // Obtener el contrato para verificar su estado actual
+            const [contrato] = await connection.query(
+                'SELECT estado FROM contratos WHERE id_contrato = ?',
+                [id]
+            );
+
+            if (!contrato[0]) {
+                throw new Error('Contrato no encontrado');
+            }
+
+            // Actualizar el contrato a estado ANULADO con motivo
+            await connection.query(`
+            UPDATE contratos 
+            SET estado = 'ANULADO',
+                motivo_anulado = ?,
+                fecha_modificacion = NOW()
+            WHERE id_contrato = ?
+        `, [
+                motivo || 'Anulado por el usuario',
+                id
+            ]);
+
+            await connection.commit();
+
+            return {
+                id_contrato: id,
+                estado: 'ANULADO',
+                motivo: motivo || 'Anulado por el usuario',
+                fecha_anulacion: new Date()
+            };
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    },
+
     obtenerClausulasPorTipo: obtenerClausulasPorTipo
 };
 
 
 
-module.exports = ContratoModel;
+module.exports = ContratoModel; 

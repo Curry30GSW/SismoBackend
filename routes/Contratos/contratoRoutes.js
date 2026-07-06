@@ -18,6 +18,7 @@ router.get('/buscar-funcionario/:documento', authMiddleware, contratoController.
 // =============================================
 router.post('/', authMiddleware, contratoController.create);
 router.post('/cambiar-indefinido/:id', authMiddleware, contratoController.cambiarAIndefinido);
+router.post('/:id/anular', authMiddleware, contratoController.anular);
 router.get('/', authMiddleware, contratoController.getAll);
 router.get('/funcionario/:id_funcionario', authMiddleware, contratoController.getByFuncionario);
 router.get('/:id', authMiddleware, contratoController.getById);

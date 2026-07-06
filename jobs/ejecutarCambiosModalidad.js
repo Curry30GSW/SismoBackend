@@ -1,24 +1,31 @@
 const pool = require('../config/ConectDb');
-const cron = require('node-cron');
 const PosicionCargoModel = require('../models/plantaCargos/PosicionCargoModel');
 const PosicionFijoModel = require('../models/plantaCargos/PosicionCargoFijoModel');
 const ContratoModel = require('../models/Contratos/ContratoModel');
 const NombramientoModel = require('../models/Contratos/NombramientosModel');
 
+
 const ejecutarCambiosModalidad = async () => {
     const connection = await pool.getConnection();
 
     try {
+        console.log('🔄 Procesando cambios de modalidad...');
         const hoy = new Date().toISOString().split('T')[0];
         const pendientes = await NombramientoModel.getPendientes();
 
         if (pendientes.length === 0) {
+            console.log('ℹ️ No hay cambios de modalidad pendientes');
             return;
         }
 
-        for (const cambio of pendientes) {
+        console.log(`📋 ${pendientes.length} cambios de modalidad pendientes encontrados`);
 
+        let ejecutados = 0;
+        let errores = 0;
+
+        for (const cambio of pendientes) {
             if (!cambio.id_posicion_nueva) {
+                console.warn(`⚠️ Cambio ${cambio.id_nombramiento} sin posición nueva, saltando...`);
                 continue;
             }
 
@@ -90,24 +97,30 @@ const ejecutarCambiosModalidad = async () => {
                 );
 
                 await connection.commit();
+                ejecutados++;
+                console.log(`✅ Cambio ${cambio.id_nombramiento} ejecutado correctamente`);
 
             } catch (err) {
                 await connection.rollback();
+                errores++;
                 console.error(
-                    `Error ejecutando nombramiento ${cambio.id_nombramiento}:`,
+                    `❌ Error ejecutando nombramiento ${cambio.id_nombramiento}:`,
                     err.message
                 );
             }
         }
+
+        console.log(`📊 Resumen cambios modalidad: ${ejecutados} ejecutados, ${errores} errores`);
+
     } catch (error) {
-        console.error('Error general en ejecutarCambiosModalidad:', error);
+        console.error('❌ Error general en ejecutarCambiosModalidad:', error);
+        throw error;
     } finally {
         connection.release();
     }
 };
 
-module.exports = { ejecutarCambiosModalidad };
 
-cron.schedule('5 0,12 * * *', ejecutarCambiosModalidad);
-
-// cron.schedule('*/10 * * * *', ejecutarCambiosModalidad);
+module.exports = {
+    ejecutarCambiosModalidad
+};

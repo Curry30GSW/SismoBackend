@@ -723,7 +723,129 @@ const contratoController = {
                 message: error.message
             });
         }
-    }
+    },
+
+    anular: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { motivo, usuario_anulacion } = req.body;
+
+            // Validar que el contrato existe
+            const contrato = await ContratoModel.getById(id);
+            if (!contrato) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contrato no encontrado'
+                });
+            }
+
+            // Validar que el contrato esté ACTIVO o PENDIENTE
+            if (contrato.estado !== 'ACTIVO' && contrato.estado !== 'PENDIENTE') {
+                return res.status(400).json({
+                    success: false,
+                    message: `No se puede anular un contrato en estado "${contrato.estado}". Solo se pueden anular contratos ACTIVOS o PENDIENTES.`
+                });
+            }
+
+            const fechaAnulacion = new Date().toISOString().split('T')[0];
+            const idPosicion = contrato.id_posicion;
+            const tipoContrato = contrato.tipo_contrato;
+            const usuario = usuario_anulacion || req.user?.email || 'SISTEMA';
+
+            // 🔥 MANEJAR LA POSICIÓN SEGÚN EL TIPO DE CONTRATO
+            if (idPosicion && contrato.estado === 'ACTIVO') {
+                // 🔥 CASO APRENDIZ: Desasignar y eliminar posición SENA
+                if (tipoContrato === 'APRENDIZ') {
+                    try {
+                        const posicionSena = await PosicionSenaModel.getById(idPosicion);
+                        if (posicionSena) {
+                            if (posicionSena.id_funcionario) {
+                                await PosicionSenaModel.desasignarAprendiz(idPosicion);
+                            }
+                            await PosicionSenaModel.delete(idPosicion, fechaAnulacion);
+
+                            await MovimientoCargoModel.create({
+                                id_posicion: idPosicion,
+                                id_funcionario: contrato.id_funcionario,
+                                tipo_movimiento: 'ANULACION',
+                                fecha_movimiento: fechaAnulacion,
+                                id_anio_legal: contrato.id_anio_legal,
+                                motivo: motivo || `Anulación de contrato APRENDIZ - ${fechaAnulacion}`,
+                                usuario_sistema: usuario
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error al manejar posición SENA:', error.message);
+                    }
+                }
+                // 🔥 CASO TÉRMINO FIJO: Desasignar y eliminar posición fija
+                else if (tipoContrato === 'TERMINO_FIJO' || tipoContrato === 'MEDIO_TIEMPO') {
+                    try {
+                        const posicionFijo = await PosicionFijoModel.getById(idPosicion);
+                        if (posicionFijo) {
+                            if (posicionFijo.id_funcionario) {
+                                await PosicionFijoModel.desasignarFuncionario(idPosicion);
+                            }
+                            await PosicionFijoModel.delete(idPosicion, fechaAnulacion);
+
+                            await MovimientoCargoModel.create({
+                                id_posicion: idPosicion,
+                                id_funcionario: contrato.id_funcionario,
+                                tipo_movimiento: 'ANULACION',
+                                fecha_movimiento: fechaAnulacion,
+                                id_anio_legal: contrato.id_anio_legal,
+                                motivo: motivo || `Anulación de contrato ${tipoContrato} - ${fechaAnulacion}`,
+                                usuario_sistema: usuario
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error al manejar posición fija:', error.message);
+                    }
+                }
+                // 🔥 CASO INDEFINIDO: Solo desasignar funcionario
+                else if (tipoContrato === 'INDEFINIDO') {
+                    try {
+                        await PosicionCargoModel.desasignarFuncionario(idPosicion);
+
+                        await MovimientoCargoModel.create({
+                            id_posicion: idPosicion,
+                            id_funcionario: contrato.id_funcionario,
+                            tipo_movimiento: 'ANULACION',
+                            fecha_movimiento: fechaAnulacion,
+                            id_anio_legal: contrato.id_anio_legal,
+                            motivo: motivo || `Anulación de contrato INDEFINIDO - ${fechaAnulacion}`,
+                            usuario_sistema: usuario
+                        });
+                    } catch (error) {
+                        console.warn('⚠️ Error al desasignar posición indefinida:', error.message);
+                    }
+                }
+            }
+
+            // Anular el contrato (solo pasa motivo y usuario)
+            const resultado = await ContratoModel.anular(id, {
+                motivo: motivo || 'Anulado por el usuario',
+                usuario_anulacion: usuario
+            });
+
+            res.json({
+                success: true,
+                message: 'Contrato anulado exitosamente',
+                data: {
+                    id_contrato: id,
+                    estado: 'ANULADO',
+                    motivo: motivo || 'Anulado por el usuario'
+                }
+            });
+
+        } catch (error) {
+            console.error('Error en anular contrato:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
 };
 
 

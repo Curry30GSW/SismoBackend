@@ -1,19 +1,26 @@
 const pool = require('../config/ConectDb');
-const cron = require('node-cron');
 const PosicionCargoModel = require('../models/plantaCargos/PosicionCargoModel');
 const ContratoModel = require('../models/Contratos/ContratoModel');
 const AscensoModel = require('../models/Contratos/AscensoModel');
 
+
 const ejecutarAscensosPendientes = async () => {
     const connection = await pool.getConnection();
     try {
+        console.log('📈 Procesando ascensos pendientes...');
         const hoy = new Date().toISOString().split('T')[0];
 
         const pendientes = await AscensoModel.getPendientes();
 
         if (pendientes.length === 0) {
+            console.log('ℹ️ No hay ascensos pendientes');
             return;
         }
+
+        console.log(`📋 ${pendientes.length} ascensos pendientes encontrados`);
+
+        let ejecutados = 0;
+        let errores = 0;
 
         for (const ascenso of pendientes) {
             await connection.beginTransaction();
@@ -63,20 +70,27 @@ const ejecutarAscensosPendientes = async () => {
                 await AscensoModel.marcarEjecutado(ascenso.id_ascenso);
 
                 await connection.commit();
+                ejecutados++;
+                console.log(`✅ Ascenso ${ascenso.id_ascenso} ejecutado correctamente`);
 
             } catch (err) {
                 await connection.rollback();
+                errores++;
                 console.error(`❌ Error ejecutando ascenso ${ascenso.id_ascenso}:`, err.message);
             }
         }
+
+        console.log(`📊 Resumen ascensos: ${ejecutados} ejecutados, ${errores} errores`);
+
+    } catch (error) {
+        console.error('❌ Error general en ejecutarAscensosPendientes:', error);
+        throw error;
     } finally {
         connection.release();
     }
 };
 
-module.exports = { ejecutarAscensosPendientes };
 
-// Ejecutar a las 00:05 y 12:05
-cron.schedule('5 0,12 * * *', ejecutarAscensosPendientes);
-
-// cron.schedule('*/10 * * * *', ejecutarAscensosPendientes)
+module.exports = {
+    ejecutarAscensosPendientes
+};
