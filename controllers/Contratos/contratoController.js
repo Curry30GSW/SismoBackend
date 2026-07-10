@@ -667,7 +667,7 @@ const contratoController = {
     cambiarAIndefinido: async (req, res) => {
         try {
             const { id } = req.params;
-            const { id_posicion, usuario_creacion } = req.body;
+            const { id_posicion, usuario_creacion, esAscenso, confianzaManejo, esCambioModalidad = true } = req.body;
 
             // Validaciones
             if (!id_posicion) {
@@ -707,7 +707,10 @@ const contratoController = {
                 id,
                 id_posicion,
                 usuario_creacion || 'SISTEMA',
-                nuevoNumeroContrato
+                nuevoNumeroContrato,
+                confianzaManejo || false,
+                esAscenso || false,
+                esCambioModalidad || true
             );
 
             res.json({

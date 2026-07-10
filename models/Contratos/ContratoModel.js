@@ -25,7 +25,7 @@ const formatearFechaLarga = (fechaStr) => {
     }
 };
 
-function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}, funcionarioData = {}, confianzaManejo = false) {
+function obtenerClausulasPorTipo(tipoContrato, fechaInicio, fechaFin, terminoInicial, cargo, datosAprendiz = {}, funcionarioData = {}, confianzaManejo = false, esAscenso = false, esCambioModalidad = false) {
 
     const esAprendiz = tipoContrato === 'APRENDIZ';
 
@@ -55,7 +55,15 @@ PARÁGRAFO PRIMERO. No obstante que la actividad para la cual el trabajador est�
         },
         {
             titulo: 'CUARTA. REMUNERACIÓN',
-            contenido: `El salario laborado como contraprestación del servicio, será como se menciona en el inicio de este contrato, pagaderos de la siguiente forma: MENSUAL, pago dentro del cual queda comprendida la remuneración de los recargos, trabajo suplementario, descansos dominicales y festivos de que tratan los Capítulos I, II y III del Título VII del C.S.T. El pago anteriormente indicado se hará mediante consignación a la cuenta de nómina autorizada e informada por el trabajador para ello.
+            contenido: confianzaManejo
+                ? `El salario como contraprestación del servicio será el indicado en el encabezado del presente contrato y se pagará mensualmente mediante consignación en la cuenta de nómina autorizada e informada por el TRABAJADOR. Dada la naturaleza del cargo de dirección, confianza y manejo desempeñado por EL TRABAJADOR, este se encuentra excluido de la jornada máxima legal de trabajo, de conformidad con el artículo 162 del Código Sustantivo del Trabajo. El salario pactado remunera las funciones y responsabilidades propias del cargo, sin perjuicio de los demás derechos laborales consagrados en la ley.
+
+PARÁGRAFO PRIMERO. Las partes convienen que el EMPLEADOR pagará al TRABAJADOR el salario aquí pactado, las prestaciones, vacaciones, indemnizaciones, liquidaciones, reliquidaciones y en general todo pago que se cause a su favor, a través de consignación que se le efectuará a dicho TRABAJADOR en la cuenta de ${datosBancarios.tipo_cuenta} No. ${datosBancarios.numero_cuenta} del banco ${datosBancarios.nombre_banco} de su titularidad o través de cheque, lo cual es autorizado y aceptado expresamente por el TRABAJADOR con la firma del presente documento.
+
+PARÁGRAFO SEGUNDO. En consideración a que toda liquidación y pago de salarios y prestaciones sociales exige varios días para obtener los datos e informes necesarios y así mismo, implica su revisión, realizar, aprobar la liquidación definitiva, girar los cheques correspondientes, etc. y en algunos casos es necesario hacer la entrega del cargo mediante acta, las partes reconocen que la liquidación final de salarios y prestaciones sociales puede requerir algunos días para su elaboración y revisión. En todo caso, el EMPLEADOR realizará el pago dentro del término legal contemplado en el artículo 65 del código sustantivo del trabajo.
+
+PARÁGRAFO TERCERO. PAGOS QUE NO CONSTITUYEN SALARIO: Para los efectos del Art. 128 del C. S. T, expresamente se conviene que los beneficios o auxilios habituales u ocasionales en dinero o especie, que considere otorgar el EMPLEADOR al TRABAJADOR por mera liberalidad, tales como suministro de alimentación, vivienda, celular, internet, dotación extralegal, auxilio educativo, auxilio de parqueadero o el monto que exceda lo que en cualquier tiempo hubieren valorado las partes por estos conceptos, o el suministro de los mismos a bajo precio, cualquier prima extralegal, de vacaciones, de servicios o navidad, gastos de telefonía celular o de cualquier otro medio de comunicación, los auxilios de vehículo o de moto sin que lo expresado configure obligación para el EMPLEADOR de conceder tales beneficios, no se tomarán en cuenta para la liquidación de las acreencias laborales que le correspondan al trabajador. De igual manera convienen las partes que tampoco constituye salario las bonificaciones, auxilios de alimentación, transporte o cualquier otro valor que le sea otorgado por la Cooperativa, a cualquier título al TRABAJADOR y durante la vigencia del presente contrato.`
+                : `El salario laborado como contraprestación del servicio, será como se menciona en el inicio de este contrato, pagaderos de la siguiente forma: MENSUAL, pago dentro del cual queda comprendida la remuneración de los recargos, trabajo suplementario, descansos dominicales y festivos de que tratan los Capítulos I, II y III del Título VII del C.S.T. El pago anteriormente indicado se hará mediante consignación a la cuenta de nómina autorizada e informada por el trabajador para ello.
 
 PARÁGRAFO PRIMERO. Las partes convienen que el EMPLEADOR pagará al TRABAJADOR el salario aquí pactado, las prestaciones, vacaciones, indemnizaciones, liquidaciones, reliquidaciones y en general todo pago que se cause a su favor, a través de consignación que se le efectuará a dicho TRABAJADOR en la cuenta de ${datosBancarios.tipo_cuenta} No. ${datosBancarios.numero_cuenta} del banco ${datosBancarios.nombre_banco} de su titularidad o través de cheque, lo cual es autorizado y aceptado expresamente por el TRABAJADOR con la firma del presente documento.
 
@@ -67,13 +75,15 @@ PARÁGRAFO TERCERO. PAGOS QUE NO CONSTITUYEN SALARIO: Para los efectos del Art. 
         {
             titulo: 'QUINTA. HORARIO',
             contenido: confianzaManejo
-                ? `El cargo de ${cargo || 'el señalado en el encabezado'} es de dirección, confianza y manejo, lo que implica que EL TRABAJADOR tendrá la responsabilidad de tomar decisiones estratégicas que afecten directamente los intereses de la empresa. Debido a la naturaleza de sus funciones, EL TRABAJADOR no estará sujeto a la jornada laboral máxima ni al pago de horas extras.`
+                ? `El TRABAJADOR se someterá a la jornada laboral de acuerdo con las especificaciones dadas por EL EMPLEADOR.`
                 : `El TRABAJADOR se someterá a la jornada laboral de acuerdo con las especificaciones dadas por EL EMPLEADOR, esto conforme a lo previsto en el Código Sustantivo del Trabajo, la Ley 2101 de 2021 y la Ley 2466 de 2025, y modificaciones sucesivas.`,
             orden: 5
         },
         {
             titulo: 'SEXTA. JORNADA',
-            contenido: `El TRABAJADOR estará sujeto a la jornada laboral establecida por el EMPLEADOR, de conformidad con lo dispuesto en el Código Sustantivo del Trabajo, la Ley 2101 de 2021 y demás normas concordantes.`,
+            contenido: confianzaManejo
+                ? `El cargo de ${cargo || 'el señalado en el encabezado'} es de dirección, confianza y manejo, lo que implica que EL TRABAJADOR tendrá la responsabilidad de tomar decisiones estratégicas que afecten directamente los intereses de la empresa. Debido a la naturaleza de sus funciones, EL TRABAJADOR no estará sujeto a la jornada laboral máxima ni al pago de horas extras.`
+                : `El TRABAJADOR estará sujeto a la jornada laboral establecida por el EMPLEADOR, de conformidad con lo dispuesto en el Código Sustantivo del Trabajo, la Ley 2101 de 2021 y demás normas concordantes.`,
             orden: 6
         },
         {
@@ -83,48 +93,87 @@ PARÁGRAFO TERCERO. PAGOS QUE NO CONSTITUYEN SALARIO: Para los efectos del Art. 
         },
         {
             titulo: 'OCTAVA. OBLIGACIONES DEL TRABAJADOR',
-            contenido: `A partir de la fecha de iniciación indicada, el TRABAJADOR se compromete para con el EMPLEADOR a cumplir además de las obligaciones establecidas en la Ley y los reglamentos, memorandos, circulares y demás documentación que las contenga, especialmente las siguientes:
+            contenido: confianzaManejo
+                ? `A partir de la fecha de iniciación indicada, el TRABAJADOR se compromete para con el EMPLEADOR a cumplir además de las obligaciones establecidas en la Ley y los reglamentos, memorandos, circulares y demás documentación que las contenga, especialmente las siguientes:
 
-1). Desarrollar y ejecutar estrategias alineadas con los objetivos de la Cooperativa
-2). Ejecutar las funciones propias del cargo asignado, cumpliendo con los lineamientos establecidos por el EMPLEADOR
-3). Garantizar el cumplimiento de las políticas y procedimientos internos.
-4). Mantener la confidencialidad de la información sensible de la Cooperativa.
-5). Prestar sus servicios personalmente, en los sitios que le sean asignados por EL EMPLEADOR concurriendo y permaneciendo en ellos en excelente estado de presentación, observando todas y cada una de las órdenes y/o instrucciones que le sean impartidas por EL EMPLEADOR directamente o a través de sus representantes, cumpliendo con las funciones propias del cargo de ${cargo || 'XXXXXXXXXXXXX'}.
-6). Cumplir puntual y rigurosamente con el horario de trabajo que el EMPLEADOR o sus representantes le impongan, así como con las variaciones que del mismo se presenten de acuerdo con las necesidades del servicio y los instructivos de la Cooperativa
-7). Prestar en caso de emergencia, apremio o requerirlo el servicio, la colaboración que sea necesaria al EMPLEADOR o a los asociados y a las autoridades respectivas sin limitaciones de tiempo y/o lugar.
-8). No abandonar el puesto de trabajo y/o lugar donde se encuentre prestando el servicio que le haya sido asignado sin previa autorización de sus superiores y no retirarse de el sin haber sido debidamente reemplazado. Para tal efecto debe hacer entrega real y física de los elementos de trabajo que le hayan sido entregados para el cumplimiento de sus funciones, así como de los bienes y documentos que le hayan sido entregados.
-9). Informar al EMPLEADOR, directamente o por intermedio de sus superiores, cualquier anomalía o circunstancia que haya conocido en ejercicio de sus funciones o fuera de ellas y que le puedan evitar perjuicios al EMPLEADOR
-10). Cumplir estrictamente las obligaciones, deberes y prohibiciones que le imponen: los Art. 58, 60 del C. S. T. y demás normas legales vigentes aplicables que surjan de la naturaleza del cargo que desempeñe o que le sean consustanciales a él.
-11). En forma especial y de conformidad a lo establecido en el Numeral 2º del Art. 58 del C.S.T., a guardar absoluta reserva y confidencialidad de cualquier información, documento, hecho o circunstancia de que tenga conocimiento en razón a su actividad laboral a favor de los asociados y empleados del EMPLEADOR, quedándole por ello terminantemente prohibido comunicar con terceras personas las informaciones que tenga en cumplimiento de sus funciones como ${cargo || 'XXXXXXXXXXXXXXXXXX'}, así como dar a conocer sin razón legal alguna los documentos propiedad de los asociados o empleados que lleguen a sus manos
-12). A no atender durante las horas de trabajo asuntos u ocupaciones distintos a los que el EMPLEADOR o las personas autorizadas por éste le encomienden.
-13). Cuidar y manejar con esmero y atención las máquinas, herramientas, utensilios, materias primas, productos en proceso o terminados, instalaciones y demás bienes del establecimiento donde preste sus servicios y evitar todo daño o pérdida que cause perjuicios a su propietario.
-14). Cumplir el contrato de manera cuidadosa y diligente en el lugar, tiempo y condiciones que la Cooperativa le señale y de acuerdo con los horarios que le fijen conforme a las necesidades del servicio.
-15). Observar rigurosamente la disciplina interna establecida por el empleador, o por las personas autorizadas por ésta.
-16). Guardar estricta reserva de todo lo que llegue a su conocimiento por razón de su oficio y cuya comunicación pudiera causar perjuicio a la Cooperativa, o las demás agencias, socios, donde trabajen.
-17) Acatar el reglamento de trabajo del EMPLEADOR.
-18). Guardar rigurosa moral, buenas costumbres, disciplina y buen comportamiento con sus superiores, compañeros y personal de la Cooperativa y el público en general, como también mantener una relación de trabajo con sus superiores, compañeros y demás regida por la cordialidad, el respeto mutuo, la tolerancia, todo en pro de una sana convivencia y la conservación de un adecuado ambiente laboral.
-19). Abstenerse de disponer de información o material de trabajo del EMPLEADOR sin permiso de este.
-20). Abstenerse de tomar alimentos en sitio de trabajo no autorizado y de fumar en cualquiera de las instalaciones de la Cooperativa.
-21) Dar aviso de inmediato al EMPLEADOR cuando por cualquier circunstancia no pudiere concurrir al trabajo. La enfermedad debe comprobarse mediante certificado médico expedido únicamente por profesionales de la E.P.S o A.R.L. a la cual se encuentre afiliado el TRABAJADOR.
-22) Aceptar los traslados de lugar de trabajo que disponga el EMPLEADOR.
-23). Observar y cumplir las normas sobre salud ocupacional y demás disposiciones reglamentarias.
-24). Mantener actualizados los datos de residencia, teléfonos, contactos, direcciones electrónicas, a fin de que la empresa pueda hacerle llegar cualquier comunicación relacionada con su relación laboral. El incumplimiento a esta obligación exime al EMPLEADOR de toda responsabilidad derivada de la especial regulación contemplada la Ley 789 de 2002 y demás normas concordantes.
-25). Dar información oportuna al Comité de Convivencia Laboral, sobre cualquier presunta conducta de acoso laboral descrito en el Reglamento Interno de Trabajo que se iniciare en su contra por parte de cualquiera de los trabajadores de la Cooperativa
-26). Portar siempre el carné de la empresa en lugar visible, la perdida y/o hurto de este deberá ser informada al EMPLEADOR y a las autoridades competentes y su reexpedición generará llamado de atención según corresponda el caso, si la misma acción de ocasiona de forma recurrente generará suspensión. Cumplir las normas, reglamentos e instrucciones del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR y asistir periódicamente a los programas de promoción y prevención adelantados por las administradoras de riesgos laborales y por el área de Salud Ocupacional.
-27) Suministrar al EMPLEADOR información clara, veraz y completa sobre su estado de salud y/o estado de gestación.
-28) Procurar el cuidado integral de su salud.
-29). Utilizar los EPP siempre en el desarrollo de sus tareas, revisándolos antes de iniciar labores y verificando que se encuentren en perfecto estado para su uso.
-30). Informar al EMPLEADOR de manera inmediata verbalmente y por escrito la ocurrencia de accidentes e incidentes que le sobrevengan por o con ocasión del trabajo.
-31). Cuidar y mantener en perfecto estado de limpieza y orden los elementos de protección personal asignados, atendiendo las indicaciones del Área de salud ocupacional.
-32). Informar oportunamente al empleador del estado de embarazo o lactancia de su cónyuge, compañero permanente o pareja
-33). Reportar en forma inmediata y por escrito la pérdida o hurto de cualquiera de los elementos asignados al EMPLEADOR, con el fin de que se efectúe la reposición.
-34). EL TRABAJADOR se obliga a presentarse en las instalaciones del EMPLEADOR, cuando por alguna razón no se le permita ingresar a las instalaciones donde presta sus servicios y/o lugar habitual de trabajo; se acuerda entre las partes que al omitir esta obligación se aplicaran las sanciones prescritas en el Reglamento Interno de Trabajo y/o el C.S.T.
+        1). Desarrollar y ejecutar estrategias de gestión del talento humano alineadas con los objetivos de la Cooperativa
+        2). Supervisar y coordinar el equipo de ${cargo || 'el señalado en el encabezado'}
+        3). Garantizar el cumplimiento de las políticas y procedimientos internos.
+        4). Mantener la confidencialidad de la información sensible de la Cooperativa.
+        5). Prestar sus servicios personalmente, en los sitios que le sean asignados por EL EMPLEADOR concurriendo y permaneciendo en ellos en excelente estado de presentación, observando todas y cada una de las órdenes y/o instrucciones que le sean impartidas por EL EMPLEADOR directamente o a través de sus representantes, cumpliendo con las funciones propias del cargo de ${cargo || 'XXXXXXXXXXXXX'}.
+        6). Cumplir puntual y rigurosamente con el horario de trabajo que el EMPLEADOR o sus representantes le impongan, así como con las variaciones que del mismo se presenten de acuerdo con las necesidades del servicio y los instructivos de la Cooperativa
+        7). Prestar en caso de emergencia, apremio o requerirlo el servicio, la colaboración que sea necesaria al EMPLEADOR o a los asociados y a las autoridades respectivas sin limitaciones de tiempo y/o lugar.
+        8). No abandonar el puesto de trabajo y/o lugar donde se encuentre prestando el servicio que le haya sido asignado sin previa autorización de sus superiores y no retirarse de el sin haber sido debidamente reemplazado. Para tal efecto debe hacer entrega real y física de los elementos de trabajo que le hayan sido entregados para el cumplimiento de sus funciones, así como de los bienes y documentos que le hayan sido entregados.
+        9). Informar al EMPLEADOR, directamente o por intermedio de sus superiores, cualquier anomalía o circunstancia que haya conocido en ejercicio de sus funciones o fuera de ellas y que le puedan evitar perjuicios al EMPLEADOR
+        10). Cumplir estrictamente las obligaciones, deberes y prohibiciones que le imponen: los Art. 58, 60 del C. S. T. y demás normas legales vigentes aplicables que surjan de la naturaleza del cargo que desempeñe o que le sean consustanciales a él.
+        11). En forma especial y de conformidad a lo establecido en el Numeral 2º del Art. 58 del C.S.T., a guardar absoluta reserva y confidencialidad de cualquier información, documento, hecho o circunstancia de que tenga conocimiento en razón a su actividad laboral a favor de los asociados y empleados del EMPLEADOR, quedándole por ello terminantemente prohibido comunicar con terceras personas las informaciones que tenga en cumplimiento de sus funciones como ${cargo || 'XXXXXXXXXXXXXXXXXX'}, así como dar a conocer sin razón legal alguna los documentos propiedad de los asociados o empleados que lleguen a sus manos
+        12). A no atender durante las horas de trabajo asuntos u ocupaciones distintos a los que el EMPLEADOR o las personas autorizadas por éste le encomienden.
+        13). Cuidar y manejar con esmero y atención las máquinas, herramientas, utensilios, materias primas, productos en proceso o terminados, instalaciones y demás bienes del establecimiento donde preste sus servicios y evitar todo daño o pérdida que cause perjuicios a su propietario.
+        14). Cumplir el contrato de manera cuidadosa y diligente en el lugar, tiempo y condiciones que la Cooperativa le señale y de acuerdo con los horarios que le fijen conforme a las necesidades del servicio.
+        15). Observar rigurosamente la disciplina interna establecida por el empleador, o por las personas autorizadas por ésta.
+        16). Guardar estricta reserva de todo lo que llegue a su conocimiento por razón de su oficio y cuya comunicación pudiera causar perjuicio a la Cooperativa, o las demás agencias, socios, donde trabajen.
+        17). Acatar el reglamento de trabajo del EMPLEADOR.
+        18). Guardar rigurosa moral, buenas costumbres, disciplina y buen comportamiento con sus superiores, compañeros y personal de la Cooperativa y el público en general, como también mantener una relación de trabajo con sus superiores, compañeros y demás regida por la cordialidad, el respeto mutuo, la tolerancia, todo en pro de una sana convivencia y la conservación de un adecuado ambiente laboral.
+        19). Abstenerse de disponer de información o material de trabajo del EMPLEADOR sin permiso de este.
+        20). Abstenerse de tomar alimentos en sitio de trabajo no autorizado y de fumar en cualquiera de las instalaciones de la Cooperativa.
+        21). Dar aviso de inmediato al EMPLEADOR cuando por cualquier circunstancia no pudiere concurrir al trabajo. La enfermedad debe comprobarse mediante certificado médico expedido únicamente por profesionales de la E.P.S o A.R.L. a la cual se encuentre afiliado el TRABAJADOR.
+        22). Aceptar los traslados de lugar de trabajo que disponga el EMPLEADOR.
+        23). Observar y cumplir las normas sobre salud ocupacional y demás disposiciones reglamentarias.
+        24). Mantener actualizados los datos de residencia, teléfonos, contactos, direcciones electrónicas, a fin de que la empresa pueda hacerle llegar cualquier comunicación relacionada con su relación laboral. El incumplimiento a esta obligación exime al EMPLEADOR de toda responsabilidad derivada de la especial regulación contemplada la Ley 789 de 2002 y demás normas concordantes.
+        25). Dar información oportuna al Comité de Convivencia Laboral, sobre cualquier presunta conducta de acoso laboral descrito en el Reglamento Interno de Trabajo que se iniciare en su contra por parte de cualquiera de los trabajadores de la Cooperativa
+        26). Portar siempre el carné de la empresa en lugar visible, la perdida y/o hurto de este deberá ser informada al EMPLEADOR y a las autoridades competentes y su reexpedición generará llamado de atención según corresponda el caso, si la misma acción de ocasiona de forma recurrente generará suspensión. Cumplir las normas, reglamentos e instrucciones del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR y asistir periódicamente a los programas de promoción y prevención adelantados por las administradoras de riesgos laborales y por el área de Salud Ocupacional.
+        27). Suministrar al EMPLEADOR información clara, veraz y completa sobre su estado de salud y/o estado de gestación.
+        28). Procurar el cuidado integral de su salud.
+        29). Utilizar los EPP siempre en el desarrollo de sus tareas, revisándolos antes de iniciar labores y verificando que se encuentren en perfecto estado para su uso.
+        30). Informar al EMPLEADOR de manera inmediata verbalmente y por escrito la ocurrencia de accidentes e incidentes que le sobrevengan por o con ocasión del trabajo.
+        31). Cuidar y mantener en perfecto estado de limpieza y orden los elementos de protección personal asignados, atendiendo las indicaciones del Área de salud ocupacional.
+        32). Informar oportunamente al empleador del estado de embarazo o lactancia de su cónyuge, compañero permanente o pareja, carente de vínculo laboral, en el marco de su derecho a la intimidad y libre desarrollo de la personalidad, con el fin de dar cumplimiento a la sentencia C-005 de 2017.
+        33). Reportar en forma inmediata y por escrito la pérdida o hurto de cualquiera de los elementos asignados al EMPLEADOR, con el fin de que se efectúe la reposición.
+        34). EL TRABAJADOR se obliga a presentarse en las instalaciones del EMPLEADOR, cuando por alguna razón no se le permita ingresar a las instalaciones donde presta sus servicios y/o lugar habitual de trabajo; se acuerda entre las partes que al omitir esta obligación se aplicaran las sanciones prescritas en el Reglamento Interno de Trabajo y/o el C.S.T.
 
-PARÁGRAFO PRIMERO: Se entiende integrado al presente contrato que una obligación especial del trabajador es cumplir con todas las disposiciones del Reglamento Interno de Trabajo de EL TRABAJADOR, el Manual SARLAFT "Sistema de Administración de Riesgos de Lavado de Activos y Financiación del Terrorismo" y demás normas laborales establecidas por EL EMPLEADOR y la Ley, las cuales EL TRABAJADOR declara conocer a satisfacción.`,
+            PARÁGRAFO PRIMERO: Se entiende integrado al presente contrato que una obligación especial del trabajador es cumplir con todas las disposiciones del Reglamento Interno de Trabajo de EL TRABAJADOR, el Manual SARLAFT "Sistema de Administración de Riesgos de Lavado de Activos y Financiación del Terrorismo" y demás normas laborales establecidas por EL EMPLEADOR y la Ley, las cuales EL TRABAJADOR declara conocer a satisfacción.`
+                : `A partir de la fecha de iniciación indicada, el TRABAJADOR se compromete para con el EMPLEADOR a cumplir además de las obligaciones establecidas en la Ley y los reglamentos, memorandos, circulares y demás documentación que las contenga, especialmente las siguientes:
+
+        1). Desarrollar y ejecutar estrategias alineadas con los objetivos de la Cooperativa
+        2). Ejecutar las funciones propias del cargo asignado, cumpliendo con los lineamientos establecidos por el EMPLEADOR
+        3). Garantizar el cumplimiento de las políticas y procedimientos internos.
+        4). Mantener la confidencialidad de la información sensible de la Cooperativa.
+        5). Prestar sus servicios personalmente, en los sitios que le sean asignados por EL EMPLEADOR concurriendo y permaneciendo en ellos en excelente estado de presentación, observando todas y cada una de las órdenes y/o instrucciones que le sean impartidas por EL EMPLEADOR directamente o a través de sus representantes, cumpliendo con las funciones propias del cargo de ${cargo || 'XXXXXXXXXXXXX'}.
+        6). Cumplir puntual y rigurosamente con el horario de trabajo que el EMPLEADOR o sus representantes le impongan, así como con las variaciones que del mismo se presenten de acuerdo con las necesidades del servicio y los instructivos de la Cooperativa
+        7). Prestar en caso de emergencia, apremio o requerirlo el servicio, la colaboración que sea necesaria al EMPLEADOR o a los asociados y a las autoridades respectivas sin limitaciones de tiempo y/o lugar.
+        8). No abandonar el puesto de trabajo y/o lugar donde se encuentre prestando el servicio que le haya sido asignado sin previa autorización de sus superiores y no retirarse de el sin haber sido debidamente reemplazado. Para tal efecto debe hacer entrega real y física de los elementos de trabajo que le hayan sido entregados para el cumplimiento de sus funciones, así como de los bienes y documentos que le hayan sido entregados.
+        9). Informar al EMPLEADOR, directamente o por intermedio de sus superiores, cualquier anomalía o circunstancia que haya conocido en ejercicio de sus funciones o fuera de ellas y que le puedan evitar perjuicios al EMPLEADOR
+        10). Cumplir estrictamente las obligaciones, deberes y prohibiciones que le imponen: los Art. 58, 60 del C. S. T. y demás normas legales vigentes aplicables que surjan de la naturaleza del cargo que desempeñe o que le sean consustanciales a él.
+        11). En forma especial y de conformidad a lo establecido en el Numeral 2º del Art. 58 del C.S.T., a guardar absoluta reserva y confidencialidad de cualquier información, documento, hecho o circunstancia de que tenga conocimiento en razón a su actividad laboral a favor de los asociados y empleados del EMPLEADOR, quedándole por ello terminantemente prohibido comunicar con terceras personas las informaciones que tenga en cumplimiento de sus funciones como ${cargo || 'XXXXXXXXXXXXXXXXXX'}, así como dar a conocer sin razón legal alguna los documentos propiedad de los asociados o empleados que lleguen a sus manos
+        12). A no atender durante las horas de trabajo asuntos u ocupaciones distintos a los que el EMPLEADOR o las personas autorizadas por éste le encomienden.
+        13). Cuidar y manejar con esmero y atención las máquinas, herramientas, utensilios, materias primas, productos en proceso o terminados, instalaciones y demás bienes del establecimiento donde preste sus servicios y evitar todo daño o pérdida que cause perjuicios a su propietario.
+        14). Cumplir el contrato de manera cuidadosa y diligente en el lugar, tiempo y condiciones que la Cooperativa le señale y de acuerdo con los horarios que le fijen conforme a las necesidades del servicio.
+        15). Observar rigurosamente la disciplina interna establecida por el empleador, o por las personas autorizadas por ésta.
+        16). Guardar estricta reserva de todo lo que llegue a su conocimiento por razón de su oficio y cuya comunicación pudiera causar perjuicio a la Cooperativa, o las demás agencias, socios, donde trabajen.
+        17). Acatar el reglamento de trabajo del EMPLEADOR.
+        18). Guardar rigurosa moral, buenas costumbres, disciplina y buen comportamiento con sus superiores, compañeros y personal de la Cooperativa y el público en general, como también mantener una relación de trabajo con sus superiores, compañeros y demás regida por la cordialidad, el respeto mutuo, la tolerancia, todo en pro de una sana convivencia y la conservación de un adecuado ambiente laboral.
+        19). Abstenerse de disponer de información o material de trabajo del EMPLEADOR sin permiso de este.
+        20). Abstenerse de tomar alimentos en sitio de trabajo no autorizado y de fumar en cualquiera de las instalaciones de la Cooperativa.
+        21). Dar aviso de inmediato al EMPLEADOR cuando por cualquier circunstancia no pudiere concurrir al trabajo. La enfermedad debe comprobarse mediante certificado médico expedido únicamente por profesionales de la E.P.S o A.R.L. a la cual se encuentre afiliado el TRABAJADOR.
+        22). Aceptar los traslados de lugar de trabajo que disponga el EMPLEADOR.
+        23). Observar y cumplir las normas sobre salud ocupacional y demás disposiciones reglamentarias.
+        24). Mantener actualizados los datos de residencia, teléfonos, contactos, direcciones electrónicas, a fin de que la empresa pueda hacerle llegar cualquier comunicación relacionada con su relación laboral. El incumplimiento a esta obligación exime al EMPLEADOR de toda responsabilidad derivada de la especial regulación contemplada la Ley 789 de 2002 y demás normas concordantes.
+        25). Dar información oportuna al Comité de Convivencia Laboral, sobre cualquier presunta conducta de acoso laboral descrito en el Reglamento Interno de Trabajo que se iniciare en su contra por parte de cualquiera de los trabajadores de la Cooperativa
+        26). Portar siempre el carné de la empresa en lugar visible, la perdida y/o hurto de este deberá ser informada al EMPLEADOR y a las autoridades competentes y su reexpedición generará llamado de atención según corresponda el caso, si la misma acción de ocasiona de forma recurrente generará suspensión. Cumplir las normas, reglamentos e instrucciones del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR y asistir periódicamente a los programas de promoción y prevención adelantados por las administradoras de riesgos laborales y por el área de Salud Ocupacional.
+        27). Suministrar al EMPLEADOR información clara, veraz y completa sobre su estado de salud y/o estado de gestación.
+        28). Procurar el cuidado integral de su salud.
+        29). Utilizar los EPP siempre en el desarrollo de sus tareas, revisándolos antes de iniciar labores y verificando que se encuentren en perfecto estado para su uso.
+        30). Informar al EMPLEADOR de manera inmediata verbalmente y por escrito la ocurrencia de accidentes e incidentes que le sobrevengan por o con ocasión del trabajo.
+        31). Cuidar y mantener en perfecto estado de limpieza y orden los elementos de protección personal asignados, atendiendo las indicaciones del Área de salud ocupacional.
+        32). Informar oportunamente al empleador del estado de embarazo o lactancia de su cónyuge, compañero permanente o pareja
+        33). Reportar en forma inmediata y por escrito la pérdida o hurto de cualquiera de los elementos asignados al EMPLEADOR, con el fin de que se efectúe la reposición.
+        34). EL TRABAJADOR se obliga a presentarse en las instalaciones del EMPLEADOR, cuando por alguna razón no se le permita ingresar a las instalaciones donde presta sus servicios y/o lugar habitual de trabajo; se acuerda entre las partes que al omitir esta obligación se aplicaran las sanciones prescritas en el Reglamento Interno de Trabajo y/o el C.S.T.
+
+            PARÁGRAFO PRIMERO: Se entiende integrado al presente contrato que una obligación especial del trabajador es cumplir con todas las disposiciones del Reglamento Interno de Trabajo de EL TRABAJADOR, el Manual SARLAFT "Sistema de Administración de Riesgos de Lavado de Activos y Financiación del Terrorismo" y demás normas laborales establecidas por EL EMPLEADOR y la Ley, las cuales EL TRABAJADOR declara conocer a satisfacción.`,
             orden: 8
         },
         {
-            titulo: 'NOVENA. CLÁUSULA DE CONFIDENCIALIDAD Y RESERVA',
+            titulo: 'NOVENA. CLÁUSULA DE CONFIDENCIALIDAD Y RESERVA.',
             contenido: `EL TRABAJADOR tiene la obligación de preservar la reserva de la información suministrada; por tanto, se compromete a utilizarla exclusivamente en desarrollo del ejercicio de su cargo y no divulgará esta información a personas que no sean funcionarios ni directivos de la Cooperativa, que requieran conocer de esta información por razón de sus funciones. La confidencialidad se mantendrá respecto de la información que ostente la calidad de reservada y que haya sido suministrada por la Cooperativa o calificada su calidad de tal por parte de este último, en forma verbal o escrita por sí o por medio de divisiones, subsidiarias, matrices, filiales, directores o empleados, individualmente o en conjunto. Para los efectos anteriores se entenderá como reservada toda la información escrita o verbal que sea entregada al EL TRABAJADOR por parte de la Cooperativa, sus clientes o sus proveedores de información. La información a que hace referencia la presente cláusula de Confidencialidad es suministrada por la Cooperativa, sus clientes o sus colaboradores, debido a las tareas que debe cumplir EL TRABAJADOR dentro del ejercicio de su cargo. En consecuencia, EL TRABAJADOR reconoce como de propiedad de la Cooperativa la información verbal o escrita que le sea suministrada y guardará confidencialidad respecto de esta en los términos de la presente cláusula de Confidencialidad.
 
 PARÁGRAFO PRIMERO. EL TRABAJADOR declara que ha asumido un deber de confidencialidad en relación con la información reservada suministrada por la Cooperativa, sus clientes o sus proveedores de información, obligándose a lo siguiente:
@@ -143,7 +192,7 @@ PARÁGRAFO SEGUNDO. La presente cláusula de Confidencialidad estará vigente du
 
 PARÁGRAFO TERCERO. EL TRABAJADOR será responsable ante la Cooperativa por los perjuicios que sean ocasionados por el incumplimiento de las obligaciones derivadas del presente acuerdo de confidencialidad establecida en el presente documento.
 
-PARÁGRAFO CUARTO. EL TRABAJADOR será responsable frente al EMPLEADOR por los perjuicios que sean consecuencia directa de su dolo o culpa grave en el incumplimiento de las obligaciones de confidencialidad previstas en esta cláusula.
+PARÁGRAFO CUARTO. El incumplimiento de las obligaciones de confidencialidad por parte del TRABAJADOR constituirá falta grave y dará lugar a las acciones legales correspondientes para la obtención de la reparación integral de los perjuicios que se llegaren a causar al EMPLEADOR o a terceros, previa demostración de la responsabilidad del TRABAJADOR conforme a la ley.
 
 PARÁGRAFO QUINTO. En el evento en que el TRABAJADOR revele la información a que se hace referencia en la presente cláusula su conducta será considerada como falta grave y por lo tanto constitutiva de justa causa para dar por terminado el contrato de trabajo unilateralmente por parte del EMPLEADOR, sin perjuicio de que el TRABAJADOR deba resarcir al EMPLEADOR o a terceras personas los perjuicios que les cause por la violación de la presente cláusula de confidencialidad.
 
@@ -162,7 +211,11 @@ PARAGRAFO DECIMO PRIMERO. El Trabajador, mediante la firma del presente document
         },
         {
             titulo: 'DÉCIMA. DOTACIÓN',
-            contenido: `Conforme al Artículo 230 C.S.T, EL TRABAJADOR se obliga a destinar el vestido y el calzado de labor suministrado a la realización de las labores contratadas por EL EMPLEADOR, quedando totalmente prohibido el uso de logos, marcas, o cualquier insignia representativa de la Cooperativa, clientes y proveedores para otros fines diferentes a los contratados; si no lo hiciere así EL EMPLEADOR quedará eximido de realizar el suministro de la dotación de vestido y calzado de labor del periodo siguiente, de conformidad con lo establecido en el Artículo 233 del C.S.T. sin perjuicio de las sanciones disciplinarias que interpongan.`,
+            contenido: confianzaManejo
+                ? `EL TRABAJADOR se obliga a destinar el vestido y el calzado de labor suministrado a la realización de las labores contratadas por EL EMPLEADOR, quedando totalmente prohibido el uso de logos, marcas, o cualquier insignia representativa de la Cooperativa, clientes y proveedores para otros fines diferentes a los contratados; si no lo hiciere así EL EMPLEADOR quedará eximido de realizar el suministro de la dotación de vestido y calzado de labor del periodo siguiente, de conformidad con lo establecido en el Artículo 233 del C.S.T. sin perjuicio de las sanciones disciplinarias que interpongan.
+
+PARÁGRAFO. Las disposiciones contenidas en la presente cláusula solo serán aplicables en los eventos en que el TRABAJADOR tenga derecho a la dotación de calzado y vestido de labor conforme a lo dispuesto en los artículos 230 y siguientes del Código Sustantivo del Trabajo y demás normas que los modifiquen, adicionen o sustituyan.`
+                : `EL TRABAJADOR se obliga a destinar el vestido y el calzado de labor suministrado a la realización de las labores contratadas por EL EMPLEADOR, quedando totalmente prohibido el uso de logos, marcas, o cualquier insignia representativa de la Cooperativa, clientes y proveedores para otros fines diferentes a los contratados; si no lo hiciere así EL EMPLEADOR quedará eximido de realizar el suministro de la dotación de vestido y calzado de labor del periodo siguiente, de conformidad con lo establecido en el Artículo 233 del C.S.T. sin perjuicio de las sanciones disciplinarias que interpongan.`,
             orden: 10
         },
         {
@@ -191,18 +244,19 @@ PARÁGRAFO PRIMERO. El presente contrato queda sujeto a las disposiciones legale
         },
         {
             titulo: 'DÉCIMA CUARTA. TERMINACIÓN UNILATERAL',
-            contenido: `Los contratantes señalan como faltas graves de EL TRABAJADOR, además de las establecidas por el Artículos 62 del Código Sustantivo del Trabajo, sus disposiciones reglamentarias y el Reglamento Interno de Trabajo, las siguientes, que de común acuerdo se califican como graves, cuyo acaecimiento dará lugar a la terminación por parte de EL EMPLEADOR del contrato de trabajo con justa causa, sin que haya lugar a indemnización alguna en favor de EL TRABAJADOR:
+            contenido: confianzaManejo
+                ? `Los contratantes señalan como faltas graves de EL TRABAJADOR, además de las establecidas por el Artículos 62 del Código Sustantivo del Trabajo, modificado por el Artículo 7 del Decreto 2.351 de 1965, sus disposiciones reglamentarias y el Reglamento Interno de Trabajo, las siguientes, que de común acuerdo se califican como graves, cuyo acaecimiento dará lugar a la terminación por parte de EL EMPLEADOR del contrato de trabajo con justa causa, sin que haya lugar a indemnización alguna en favor de EL TRABAJADOR:
 
 1) Por violación a cualquiera de las estipulaciones del presente contrato
-2). La inasistencia injustificada por una sola vez de EL TRABAJADOR al cumplimiento de sus labores o el abandono de las mismas sin autorización superior o sin justa causa comprobada a juicio de la Cooperativa.
-3). Por incurrir en cualquier negligencia que ponga en peligro su seguridad y la de las demás personas, máquinas, materias primas y todos los objetos relacionados con la labor que se compromete a ejecutar el TRABAJADOR.
-4). Presentarse en los lugares o sitios designados para ejercer sus funciones o en las instalaciones de la Cooperativa habiendo ingerido licor, o bajo el efecto de narcóticos y/o cualquier otra droga enervante, o consumirlos durante el desempeño de sus funciones o el entregar el turno a quien se presente en tales condiciones sin informar en forma inmediata a la Cooperativa de tal anomalía. siendo este un interés legítimo del empleador para que se dé una prestación adecuada de la labor contratada, por lo tanto, remitirá o practicará los exámenes médicos ó pruebas que determinen el estado del trabajador cuando se presenta a laborar bajo la influencia de bebidas alcohólicas, de narcóticos y/o cualquier otra droga enervante, para determinar el grado de afectación de la labor desarrollada
+2) La inasistencia injustificada por una sola vez de EL TRABAJADOR al cumplimiento de sus labores o el abandono de las mismas sin autorización superior o sin justa causa comprobada a juicio de la Cooperativa.
+3) Por incurrir en cualquier negligencia que ponga en peligro su seguridad y la de las demás personas, máquinas, materias primas y todos los objetos relacionados con la labor que se compromete a ejecutar el TRABAJADOR.
+4) Presentarse en los lugares o sitios designados para ejercer sus funciones o en las instalaciones de la Cooperativa habiendo ingerido licor, o bajo el efecto de narcóticos y/o cualquier otra droga enervante, o consumirlos durante el desempeño de sus funciones o el entregar el turno a quien se presente en tales condiciones sin informar en forma inmediata a la Cooperativa de tal anomalía. siendo este un interés legítimo del empleador para que se dé una prestación adecuada de la labor contratada, por lo tanto, remitirá o practicará los exámenes médicos ó pruebas que determinen el estado del trabajador cuando se presenta a laborar bajo la influencia de bebidas alcohólicas, de narcóticos y/o cualquier otra droga enervante, para determinar el grado de afectación de la labor desarrollada, en concordancia con la sentencia 636 de 2016.
 5) El no tratar, razonablemente, de impedir la ejecución de actos delictuosos o en detrimento del EMPLEADOR o de la persona a quien éste presta sus servicios o el que teniendo conocimiento de los mismos no dar aviso al EMPLEADOR o a sus representantes en forma inmediata
 6) Concurrir, con el uniforme, prendas y insignias en establecimientos dedicados al expendio de bebidas embriagantes, sitios de dudosa reputación tales como bares, night clubs, prostíbulos, billares, fiestas sociales, o cualquier otro lugar donde se expendan bebidas alcohólicas, o en aquellos lugares donde les esté prohibido según las disposiciones legales
-7). Negarse a aceptar traslados que el EMPLEADOR o sus representantes dispongan para la prestación de sus servicios cuando los cambios obedecen a las necesidades del servicio.
+7) Negarse a aceptar traslados que el EMPLEADOR o sus representantes dispongan para la prestación de sus servicios cuando los cambios obedecen a las necesidades del servicio.
 8) Desacatar o incumplir las instrucciones específicas que le sean impartidas para la prestación de sus servicios en los lugares asignados para su desempeño tales como: abstenerse de fumar, no contestar los reportes que se le hagan vía teléfono o por cualquier otro medio previamente determinado, el uso abusivo, personalísimo o temerario de los elementos asignados para la prestación del servicio como computadores, teléfonos, dotación, insignias, llaves, fotocopiadoras, y demás implementos o instrumentos, etc., que sean de propiedad del EMPLEADOR, o que le hayan sido confiados por el usuario del servicio en el lugar donde desempeña sus funciones ò no asistir sin justificación alguna a cualquier tipo de citación hecha por el EMPLEADOR a las instalaciones de la empresa
 9) El no uso de los equipos de protección personal asignados según el sitio de trabajo o dentro de la prestación de su servicio, así como el desobedecer las órdenes e incumplir las normas y políticas de salud ocupacional y/o seguridad industrial.
-10). El Solicitar créditos, préstamos de dinero o de cualquier otro bien a los asociados o personas que tengan vínculo directo con la Cooperativa
+10) El Solicitar créditos, préstamos de dinero o de cualquier otro bien a los asociados o personas que tengan vínculo directo con la Cooperativa
 11) El recibir visitas personales o el trato confianzudo o excesivo con las personas durante el cumplimiento de la jornada laboral.
 12) Por encontrar en poder del TRABAJADOR o en lugar destinado a guardar sus elementos de trabajo, sin autorización alguna, herramientas, materias primas, objetos de producción y demás elementos que no le pertenecen.
 13) Por ordenar, incitar, realizar o participar en cualquier cese ilegal en el trabajo.
@@ -215,47 +269,106 @@ PARÁGRAFO PRIMERO. El presente contrato queda sujeto a las disposiciones legale
 20) El uso indebido de papelería, documentos o similares en las labores que desempeñe y que sean suministrados por el EMPLEADOR.
 21) La violación a las especiales obligaciones y prohibiciones contempladas en el presente contrato.
 22) El no aceptar las asignaciones de trabajo.
-23) Incurrir en cualquier negligencia que ponga en peligro su seguridad y la de las demás personas, máquinas, materias primas y todos los objetos relacionados con la labor que se compromete a ejecutar el TRABAJADOR.
-24) Revelar secretos, fórmulas, sistemas, procedimientos y demás datos reservados de la Cooperativa.
-25) No utilización por parte del TRABAJADOR del equipo de seguridad y elementos de trabajo asignados o suministrados por la Cooperativa que ponga en peligro su integridad, o la de sus compañeros.
-26) Por la revelación de secretos, fórmulas, sistemas, procedimientos y demás datos reservados del empleador, aún por primera vez.
-27) Solicitar dádivas, o préstamos de dinero a los asociados o compañeros de labor.
-28) Todo acto inmoral o delictuoso que cometa el TRABAJADOR durante el desempeño de sus labores en contra de la Cooperativa, EMPLEADOR o sus compañeros de trabajo.
-29) La alteración, modificación, ocultamiento o simulación de los informes de trabajo reportados por sus representantes.
-30) La omisión por parte del TRABAJADOR de cualquier información requerida por la empresa.
-31) El incumplimiento por parte del TRABAJADOR de las instrucciones que imparta el Representante Legal de la Cooperativa o sus representantes para la ejecución de las labores ejecutadas al servicio de este.
-32) Por dejar de marcar su tarjeta de control, timbrar la de otro TRABAJADOR o sustituir a este en cualquier irregularidad o sin autorización previa.
-33) Por la sustracción de cualquier objeto que no le pertenezca.
-34) Por abandonar el sitio de trabajo, sin permiso de las personas que tiene a su cargo la disciplina.
-35) Por la no asistencia a una sesión completa de la jornada de trabajo o más, sin excusa suficiente a juicio de la Cooperativa.
-36) Por la pugnacidad, desavenencia o falta de entendimiento del TRABAJADOR con algunas de las personas que laboran en la misma Cooperativa y que a juicio de los directivos de este, pueda lesionar la marcha armónica de las labores.
-37) Por no aceptar las asignaciones de trabajo de la empresa dentro del objeto del contrato.
-38) Retirar de las oficinas archivos, documentos, elementos o dar a conocer cualquier documento, sin autorización expresa para ello.
-39) No cumplir con las normas del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR.
-40) Las partes califican como falta grave a las obligaciones y deberes del TRABAJADOR, la modificación o uso indebido de la información contenida en el comprobante de pago o en certificaciones laborales.
-41) El incumplimiento por parte del TRABAJADOR a las normas de administración y protección de datos en perjuicio del EMPLEADOR.
-42) La extralimitación de funciones que afecten o pongan en peligro los intereses de EL EMPLEADOR.
-43) La violación de la reserva de aspectos confidenciales puestos bajo la responsabilidad de EL TRABAJADOR o conocidos por éste debido a su cargo.
-44) La realización de actos que en cualquier forma entorpezcan o incidan negativamente en el normal desarrollo de las actividades patronales o en perjuicios de terceros.
-45) O la ocurrencia de faltantes o descuadres en dinero o el extravío, destrucción, deterioro o pérdida de documentos o elementos bajo la responsabilidad o en poder de EL TRABAJADOR, siempre que no se dé una causa justificada a juicio de EL EMPLEADOR.
-46) El uso indebido por acción, omisión, error, negligencia o descuido de la firma autorizada, que incida negativamente contra los intereses de Cooperativa, o los ponga en peligro.
-47) Bajar el nivel de productividad frente a su mismo nivel de quienes desempeñan una labor similar.
-48) callar u ocultar errores en la liquidación de los pagos que reciba con el fin de obtener un provecho.
-49) Asimismo el incurrir en las faltas que se califiquen como graves en manuales, instructivos, memorandos, reglamentos y demás documentos que contengan reglamentaciones, circulares normativas y demás documentos relacionados.
-50) Expresamente se califican como faltas graves en este acto, la violación a las obligaciones contenidas en el presente contrato, el reglamento interno de trabajo, circulares normativas, políticas, anexos, términos de referencia, memorandos, los cuales hacen parte integral de este contrato.
-51) Se consideran faltas graves las establecidas por parte del EMPLEADOR en reglamentos y demás documentos que contengan reglamentaciones, órdenes, instrucciones o prohibiciones de carácter general o particular, pactos, convenciones colectivas, laudos arbitrales y las que expresamente convengan calificar así en escritos que formaran parte integrante del presente contrato.
-52) Que el TRABAJADOR suministre información o documentación equivocada, imprecisa o no cierta sobre su estado de salud, formación académica, experiencia laboral, referencias, datos personales y demás en el proceso de selección, contratación, en el desarrollo de sus labores y durante la vigencia del presente contrato laboral.
-53) No dar cumplimiento a las normas contenidas en el Reglamento Interno de Trabajo o por disposición expresa de la Cooperativa, en calidad de EMPLEADOR.
-54) El incumplimiento al horario de trabajo, teniendo claridad el trabajador que el retardo injustificado es falta grave. En consecuencia, la ocurrencia de cualquiera de estos hechos referidos, faculta al EMPLEADOR para dar por terminado su contrato de trabajo por justa causa de conformidad con el Reglamento Interno de Trabajo y las normas disciplinarias.
-55) Suministrar información o documentación falsa u omitir información en el proceso de selección o contratación, que pueda generarle un perjuicio al EMPLEADOR.
-56) El incumplimiento de cualquiera de las obligaciones y prohibiciones especiales establecidas por el Artículo 58 y 60 del Código Sustantivo del Trabajo.
-57) La realización de actividades en contravención a órdenes superiores o de reglamento, de carácter culposo, o doloso que atenten o incidan negativamente contra los intereses de EL EMPLEADOR o de terceros.
-58) El grave incumplimiento por parte del TRABAJADOR de las instrucciones, reglamentos y determinaciones de prevención de riesgos, adoptados en forma general o específica, y que se encuentren dentro de los programas de salud ocupacional del EMPLEADOR.
-59) Asimismo el incurrir en las faltas que se califiquen como graves en manuales, instructivos, reglamentos, memorandos, circulares y demás documentos que contengan reglamentaciones, circulares normativas y demás documentos relacionados.
+23) Revelar secretos, fórmulas, sistemas, procedimientos y demás datos reservados de la Cooperativa.
+24) No utilización por parte del TRABAJADOR del equipo de seguridad y elementos de trabajo asignados o suministrados por la Cooperativa que ponga en peligro su integridad, o la de sus compañeros.
+25) Por la revelación de secretos, fórmulas, sistemas, procedimientos y demás datos reservados del empleador, aún por primera vez.
+26) Solicitar dádivas, o préstamos de dinero a los asociados o compañeros de labor.
+27) Todo acto inmoral o delictuoso que cometa el TRABAJADOR durante el desempeño de sus labores en contra de la Cooperativa, EMPLEADOR o sus compañeros de trabajo.
+28) La alteración, modificación, ocultamiento o simulación de los informes de trabajo reportados por sus representantes.
+29) La omisión por parte del TRABAJADOR de cualquier información requerida por la empresa.
+30) Por dejar de marcar su tarjeta de control, timbrar la de otro TRABAJADOR o sustituir a este en cualquier irregularidad o sin autorización previa.
+31) Por la sustracción de cualquier objeto que no le pertenezca.
+32) Por abandonar el sitio de trabajo, sin permiso de las personas que tienen a su cargo la disciplina, salvo cuando el desplazamiento responda a las gestiones propias de su cargo de dirección y manejo
+33) Por la no asistencia a una sesión completa de la jornada de trabajo o más, sin excusa suficiente a juicio de la Cooperativa.
+34) Por la pugnacidad, desavenencia o falta de entendimiento del TRABAJADOR con algunas de las personas que laboran en la misma Cooperativa y que a juicio de los directivos de este, pueda lesionar la marcha armónica de las labores.
+35) Retirar de las oficinas archivos, documentos, elementos o dar a conocer cualquier documento, sin autorización expresa para ello.
+36) No cumplir con las normas del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR.
+37) Las partes califican como falta grave a las obligaciones y deberes del TRABAJADOR, la modificación o uso indebido de la información contenida en el comprobante de pago o en certificaciones laborales.
+38) El incumplimiento por parte del TRABAJADOR a las normas de administración y protección de datos en perjuicio del EMPLEADOR.
+39) La extralimitación de funciones que afecten o pongan en peligro los intereses de EL EMPLEADOR.
+40) La violación de la reserva de aspectos confidenciales puestos bajo la responsabilidad de EL TRABAJADOR o conocidos por éste debido a su cargo.
+41) La realización de actos que en cualquier forma entorpezcan o incidan negativamente en el normal desarrollo de las actividades patronales o en perjuicios de terceros.
+42) O la ocurrencia de faltantes o descuadres en dinero o el extravío, destrucción, deterioro o pérdida de documentos o elementos bajo la responsabilidad o en poder de EL TRABAJADOR, siempre que no se dé una causa justificada a juicio de EL EMPLEADOR.
+43) El uso indebido por acción, omisión, error, negligencia o descuido de la firma autorizada, que incida negativamente contra los intereses de Cooperativa, o los ponga en peligro.
+44) Bajar el nivel de productividad frente a su mismo nivel de quienes desempeñan una labor similar.
+45) callar u ocultar errores en la liquidación de los pagos que reciba con el fin de obtener un provecho.
+46) Asimismo el incurrir en las faltas que se califiquen como graves en manuales, instructivos, memorandos, reglamentos y demás documentos que contengan reglamentaciones, circulares normativas y demás documentos relacionados.
+47) Expresamente se califican como faltas graves en este acto, la violación a las obligaciones contenidas en el presente contrato, el reglamento interno de trabajo, circulares normativas, políticas, anexos, términos de referencia, memorandos, los cuales hacen parte integral de este contrato.
+48) Se consideran faltas graves las establecidas por parte del EMPLEADOR en reglamentos y demás documentos que contengan reglamentaciones, órdenes, instrucciones o prohibiciones de carácter general o particular, pactos, convenciones colectivas, laudos arbitrales y las que expresamente convengan calificar así en escritos que formaran parte integrante del presente contrato.
+49) Que el TRABAJADOR suministre información o documentación equivocada, imprecisa o no cierta sobre su estado de salud, formación académica, experiencia laboral, referencias, datos personales y demás en el proceso de selección, contratación, en el desarrollo de sus labores y durante la vigencia del presente contrato laboral.
+50) No dar cumplimiento a las normas contenidas en el Reglamento Interno de Trabajo o por disposición expresa de la Cooperativa, en calidad de EMPLEADOR.
+51) El incumplimiento al horario de trabajo, teniendo claridad el trabajador que el retardo injustificado es falta grave. En consecuencia, la ocurrencia de cualquiera de estos hechos referidos, faculta al EMPLEADOR para dar por terminado su contrato de trabajo por justa causa de conformidad con el Reglamento Interno de Trabajo y las normas disciplinarias.
+52) Suministrar información o documentación falsa u omitir información en el proceso de selección o contratación, que pueda generarle un perjuicio al EMPLEADOR.
+53) El incumplimiento de cualquiera de las obligaciones y prohibiciones especiales establecidas por el Artículo 58 y 60 del Código Sustantivo del Trabajo.
+54) La realización de actividades en contravención a órdenes superiores o de reglamento, de carácter culposo, o doloso que atenten o incidan negativamente contra los intereses de EL EMPLEADOR o de terceros.
+55) El grave incumplimiento por parte del TRABAJADOR de las instrucciones, reglamentos y determinaciones de prevención de riesgos, adoptados en forma general o específica, y que se encuentren dentro de los programas de salud ocupacional del EMPLEADOR.
 
 PARÁGRAFO PRIMERO. Terminado el contrato por cualquier motivo, es responsabilidad del TRABAJADOR hacer entrega de su cargo a través de un ACTA DE FINALIZACIÓN, en la cual se detallen los asuntos pendientes y se sugieran las acciones que se deban ejecutar para el normal desarrollo de la responsabilidad del cargo. Adicionalmente deberá devolver los bienes, valores, productos y documentos de propiedad de la empresa que le hayan sido confiados, lo mismo que el carnet que lo acredita como empleado
 
 PARÁGRAFO SEGUNDO. TERMINACIÓN INTEMPESTIVA DEL CONTRATO DE TRABAJO POR PARTE DEL TRABAJADOR: Para todos los efectos legales en los términos del Art.6º de la Ley 50 de 1990 se considerará terminación intempestiva del contrato de trabajo por parte del TRABAJADOR, la falta de este al trabajo sin permiso o sin justa causa comprobada a juicio de la Cooperativa, caso en el cual EL EMPLEADOR solamente se limitará a aceptar dicha terminación y proceder al pago de las prestaciones sociales correspondientes.
+
+PARÁGRAFO TERCERO: De igual manera el contrato de trabajo termina por mandato legal en los términos del Art. 5º Literal I) de la Ley 50 de 1990, cuando el TRABAJADOR no regrese a su labor al desaparecer la causa de suspensión del contrato.`
+                : `Los contratantes señalan como faltas graves de EL TRABAJADOR, además de las establecidas por el Artículos 62 del Código Sustantivo del Trabajo, sus disposiciones reglamentarias y el Reglamento Interno de Trabajo, las siguientes, que de común acuerdo se califican como graves, cuyo acaecimiento dará lugar a la terminación por parte de EL EMPLEADOR del contrato de trabajo con justa causa, sin que haya lugar a indemnización alguna en favor de EL TRABAJADOR:
+
+1) Por violación a cualquiera de las estipulaciones del presente contrato
+2) La inasistencia injustificada por una sola vez de EL TRABAJADOR al cumplimiento de sus labores o el abandono de las mismas sin autorización superior o sin justa causa comprobada a juicio de la Cooperativa.
+3) Por incurrir en cualquier negligencia que ponga en peligro su seguridad y la de las demás personas, máquinas, materias primas y todos los objetos relacionados con la labor que se compromete a ejecutar el TRABAJADOR.
+4) Presentarse en los lugares o sitios designados para ejercer sus funciones o en las instalaciones de la Cooperativa habiendo ingerido licor, o bajo el efecto de narcóticos y/o cualquier otra droga enervante, o consumirlos durante el desempeño de sus funciones o el entregar el turno a quien se presente en tales condiciones sin informar en forma inmediata a la Cooperativa de tal anomalía. siendo este un interés legítimo del empleador para que se dé una prestación adecuada de la labor contratada, por lo tanto, remitirá o practicará los exámenes médicos ó pruebas que determinen el estado del trabajador cuando se presenta a laborar bajo la influencia de bebidas alcohólicas, de narcóticos y/o cualquier otra droga enervante, para determinar el grado de afectación de la labor desarrollada.
+5) El no tratar, razonablemente, de impedir la ejecución de actos delictuosos o en detrimento del EMPLEADOR o de la persona a quien éste presta sus servicios o el que teniendo conocimiento de los mismos no dar aviso al EMPLEADOR o a sus representantes en forma inmediata
+6) Concurrir, con el uniforme, prendas y insignias en establecimientos dedicados al expendio de bebidas embriagantes, sitios de dudosa reputación tales como bares, night clubs, prostíbulos, billares, fiestas sociales, o cualquier otro lugar donde se expendan bebidas alcohólicas, o en aquellos lugares donde les esté prohibido según las disposiciones legales
+7) Negarse a aceptar traslados que el EMPLEADOR o sus representantes dispongan para la prestación de sus servicios cuando los cambios obedecen a las necesidades del servicio.
+8) Desacatar o incumplir las instrucciones específicas que le sean impartidas para la prestación de sus servicios en los lugares asignados para su desempeño tales como: abstenerse de fumar, no contestar los reportes que se le hagan vía teléfono o por cualquier otro medio previamente determinado, el uso abusivo, personalísimo o temerario de los elementos asignados para la prestación del servicio como computadores, teléfonos, dotación, insignias, llaves, fotocopiadoras, y demás implementos o instrumentos, etc., que sean de propiedad del EMPLEADOR, o que le hayan sido confiados por el usuario del servicio en el lugar donde desempeña sus funciones ò no asistir sin justificación alguna a cualquier tipo de citación hecha por el EMPLEADOR a las instalaciones de la empresa
+9) El no uso de los equipos de protección personal asignados según el sitio de trabajo o dentro de la prestación de su servicio, así como el desobedecer las órdenes e incumplir las normas y políticas de salud ocupacional y/o seguridad industrial.
+10) El Solicitar créditos, préstamos de dinero o de cualquier otro bien a los asociados o personas que tengan vínculo directo con la Cooperativa
+11) El recibir visitas personales o el trato confianzudo o excesivo con las personas durante el cumplimiento de la jornada laboral.
+12) Por encontrar en poder del TRABAJADOR o en lugar destinado a guardar sus elementos de trabajo, sin autorización alguna, herramientas, materias primas, objetos de producción y demás elementos que no le pertenecen.
+13) Por ordenar, incitar, realizar o participar en cualquier cese ilegal en el trabajo.
+14) El incumplimiento por parte del TRABAJADOR de las instrucciones e indicaciones que le imparta el EMPLEADOR o sus representantes para la ejecución de las labores ejecutadas al servicio de este.
+15) La ocurrencia de cualquier acto de violencia, injuria, malos tratamientos o irrespeto injustificado por parte de EL TRABAJADOR hacia sus superiores, funcionarios de la Cooperativa o a terceros, dentro de las instalaciones de la Cooperativa o de las instalaciones donde ejerza su actividad o fuera de ellas, pero en este último caso en cumplimiento de sus funciones
+16) Negociar la información de la Cooperativa para beneficio personal o de terceros, o bienes materiales de propiedad del EMPLEADOR.
+17) Autorizar o ejecutar sin ser de su competencia, actividades que afecten los intereses del EMPLEADOR.
+18) Valerse del nombre del EMPLEADOR o de las labores encomendadas por este para emprender, respaldar o acreditar negocios particulares o actividades comerciales personales.
+19) Presentar cuentas de gastos ficticios o reportar como cumplidas tareas no efectuadas.
+20) El uso indebido de papelería, documentos o similares en las labores que desempeñe y que sean suministrados por el EMPLEADOR.
+21) La violación a las especiales obligaciones y prohibiciones contempladas en el presente contrato.
+22) El no aceptar las asignaciones de trabajo.
+23) Revelar secretos, fórmulas, sistemas, procedimientos y demás datos reservados de la Cooperativa.
+24) No utilización por parte del TRABAJADOR del equipo de seguridad y elementos de trabajo asignados o suministrados por la Cooperativa que ponga en peligro su integridad, o la de sus compañeros.
+25) Por la revelación de secretos, fórmulas, sistemas, procedimientos y demás datos reservados del empleador, aún por primera vez.
+26) Solicitar dádivas, o préstamos de dinero a los asociados o compañeros de labor.
+27) Todo acto inmoral o delictuoso que cometa el TRABAJADOR durante el desempeño de sus labores en contra de la Cooperativa, EMPLEADOR o sus compañeros de trabajo.
+28) La alteración, modificación, ocultamiento o simulación de los informes de trabajo reportados por sus representantes.
+29) La omisión por parte del TRABAJADOR de cualquier información requerida por la empresa.
+30) Por dejar de marcar su tarjeta de control, timbrar la de otro TRABAJADOR o sustituir a este en cualquier irregularidad o sin autorización previa.
+31) Por la sustracción de cualquier objeto que no le pertenezca.
+32) Por abandonar el sitio de trabajo, sin permiso de las personas que tiene a su cargo la disciplina
+33) Por la no asistencia a una sesión completa de la jornada de trabajo o más, sin excusa suficiente a juicio de la Cooperativa.
+34) Por la pugnacidad, desavenencia o falta de entendimiento del TRABAJADOR con algunas de las personas que laboran en la misma Cooperativa y que a juicio de los directivos de este, pueda lesionar la marcha armónica de las labores.
+35) Retirar de las oficinas archivos, documentos, elementos o dar a conocer cualquier documento, sin autorización expresa para ello.
+36) No cumplir con las normas del SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO SG-SST del EMPLEADOR.
+37) Las partes califican como falta grave a las obligaciones y deberes del TRABAJADOR, la modificación o uso indebido de la información contenida en el comprobante de pago o en certificaciones laborales.
+38) El incumplimiento por parte del TRABAJADOR a las normas de administración y protección de datos en perjuicio del EMPLEADOR.
+39) La extralimitación de funciones que afecten o pongan en peligro los intereses de EL EMPLEADOR.
+40) La violación de la reserva de aspectos confidenciales puestos bajo la responsabilidad de EL TRABAJADOR o conocidos por éste debido a su cargo.
+41) La realización de actos que en cualquier forma entorpezcan o incidan negativamente en el normal desarrollo de las actividades patronales o en perjuicios de terceros.
+42) O la ocurrencia de faltantes o descuadres en dinero o el extravío, destrucción, deterioro o pérdida de documentos o elementos bajo la responsabilidad o en poder de EL TRABAJADOR, siempre que no se dé una causa justificada a juicio de EL EMPLEADOR.
+43) El uso indebido por acción, omisión, error, negligencia o descuido de la firma autorizada, que incida negativamente contra los intereses de Cooperativa, o los ponga en peligro.
+44) Bajar el nivel de productividad frente a su mismo nivel de quienes desempeñan una labor similar.
+45) callar u ocultar errores en la liquidación de los pagos que reciba con el fin de obtener un provecho.
+46) Asimismo el incurrir en las faltas que se califiquen como graves en manuales, instructivos, memorandos, reglamentos y demás documentos que contengan reglamentaciones, circulares normativas y demás documentos relacionados.
+47) Expresamente se califican como faltas graves en este presente contrato, el reglamento interno de trabajo, circulares normativas, políticas, anexos, términos de referencia, memorandos, los cuales hacen parte integral de este contrato.
+48) Se consideran faltas graves las establecidas por parte del EMPLEADOR en reglamentos y demás documentos que contengan reglamentaciones, órdenes, instrucciones o prohibiciones de carácter general o particular, pactos, convenciones colectivas, laudos arbitrales y las que expresamente convengan calificar así en escritos que formaran parte integrante del presente contrato.
+49) Que el TRABAJADOR suministre información o documentación equivocada, imprecisa o no cierta sobre su estado de salud, formación académica, experiencia laboral, referencias, datos personales y demás en el proceso de selección, contratación, en el desarrollo de sus labores y durante la vigencia del presente contrato laboral.
+50) No dar cumplimiento a las normas contenidas en el Reglamento Interno de Trabajo o por disposición expresa de la Cooperativa, en calidad de EMPLEADOR.
+51) El incumplimiento al horario de trabajo, teniendo claridad el trabajador que el retardo injustificado es falta grave. En consecuencia, la ocurrencia de cualquiera de estos hechos referidos, faculta al EMPLEADOR para dar por terminado su contrato de trabajo por justa causa de conformidad con el Reglamento Interno de Trabajo y las normas disciplinarias.
+52) Suministrar información o documentación falsa u omitir información en el proceso de selección o contratación, que pueda generarle un perjuicio al EMPLEADOR.
+53) El incumplimiento de cualquiera de las obligaciones y prohibiciones especiales establecidas por el Artículo 58 y 60 del Código Sustantivo del Trabajo.
+54) La realización de actividades en contravención a órdenes superiores o de reglamento, de carácter culposo, o doloso que atenten o incidan negativamente contra los intereses de EL EMPLEADOR o de terceros.
+55) El grave incumplimiento por parte del TRABAJADOR de las instrucciones, reglamentos y determinaciones de prevención de riesgos, adoptados en forma general o específica, y que se encuentren dentro de los programas de salud ocupacional del EMPLEADOR.
+
+PARÁGRAFO PRIMERO. Terminado el contrato por cualquier motivo, es responsabilidad del TRABAJADOR hacer entrega de su cargo a través de un ACTA DE FINALIZACIÓN, en la cual se detallen los asuntos pendientes y se sugieran las acciones que se deban ejecutar para el normal desarrollo de la responsabilidad del cargo. Adicionalmente deberá devolver los bienes, valores, productos y documentos de propiedad de la empresa que le hayan sido confiados, lo mismo que el carnet que lo acredita como empleado
+
+PARÁGRAFO SEGUNDO. TERMINACIÓN INTEMPESTIVA DEL CONTRATO DE TRABAJO POR PARTE DEL TRABAJADOR: Se considerará terminación intempestiva del contrato de trabajo por parte del TRABAJADOR, la falta de este al trabajo sin permiso o sin justa causa comprobada a juicio de la Cooperativa, caso en el cual EL EMPLEADOR solamente se limitará a aceptar dicha terminación y proceder al pago de las prestaciones sociales correspondientes.
 
 PARÁGRAFO TERCERO: De igual manera el contrato de trabajo termina por mandato legal en los términos del Art. 5º Literal I) de la Ley 50 de 1990, cuando el TRABAJADOR no regrese a su labor al desaparecer la causa de suspensión del contrato.`,
             orden: 14
@@ -272,9 +385,11 @@ PARÁGRAFO TERCERO: De igual manera el contrato de trabajo termina por mandato l
         },
         {
             titulo: 'DÉCIMA SEPTIMA. EFICACIA',
-            contenido: tipoContrato === 'INDEFINIDO'
-                ? `el presente contrato sustituye las condiciones del contrato anterior únicamente en cuanto a su modalidad, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas, Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`
-                : `El presente contrato regula la relación laboral entre las partes durante su vigencia, sin perjuicio de los derechos causados con anterioridad en caso de existir una vinculación previa, este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`,
+            contenido: confianzaManejo
+                ? `El presente contrato sustituye las condiciones del contrato anterior en cuanto a cargo, funciones, remuneración, como trabajador de dirección, confianza y manejo, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas en la legislación laboral para los contratos sin que les pueda ser aplicable ninguna otra norma diferente.`
+                : tipoContrato === 'INDEFINIDO' && (esAscenso || esCambioModalidad)
+                    ? `El presente contrato sustituye las condiciones del contrato anterior únicamente en cuanto a su modalidad, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas, Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`
+                    : `El presente contrato regula la relación laboral entre las partes durante su vigencia, sin perjuicio de los derechos causados con anterioridad en caso de existir una vinculación previa, este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`,
             orden: 17
         },
         {
@@ -288,9 +403,9 @@ PARÁGRAFO TERCERO: De igual manera el contrato de trabajo termina por mandato l
 
 NOTIFICACIONES: Las partes aceptan de manera expresa que cualquiera de los datos personales suministrados en la parte superior del presente contrato son medios aptos, idóneos y aceptados por cada una de ellas para efectos de notificaciones, siendo el correo electrónico personal o corporativo de EL TRABAJADOR el medio más expedito por el cual el TRABAJADOR recibirá comunicaciones, notificaciones, citaciones a descargos, notificación de terminación del contrato y las que llegase a formular el EMPLEADOR. En el evento de requerirse el reenvió de una documentación firmada o suscrita por EL TRABAJADOR, con destino y a solicitud del EMPLEADOR, se entenderá aceptada y/o notificada por el solo hecho de ser enviada al correo electrónico del TRABAJADOR. El TRABAJADOR se obliga a actualizar por escrito los datos que hayan variado con relación a los aportados al momento de su ingreso a más tardar dentro de los diez (10) días hábiles siguientes a la fecha en la que se genera la novedad en la información. De manera expresa, libre y voluntaria el TRABAJADOR acepta y autoriza al EMPLEADOR para que le sea remitido y notificado al correo electrónico que éste informó y que se consignó en la parte superior del presente contrato y/o que de manera escrita actualice posteriormente de conformidad con lo establecido en las Cláusulas, cualquier tipo de información o comunicación relacionada con el contrato de trabajo incluyendo la finalización o terminación de éste.
 
-PARÁGRAFO PRIMERO: Domicilio Contractual: Para los efectos de este Contrato, las partes aceptan y reconocen como domicilio contractual la ciudad o municipio de Cali, Colombia.
+PARÁGRAFO PRIMERO: Domicilio Contractual: Para los efectos de este Contrato, las partes aceptan y reconocen como domicilio contractual la ciudad o municipio especificado en el cuadro de datos inicial.
 
-PARÁGRAFO SEGUNDO El trabajador manifiesta que ha sido informado sobre el carácter reservado de la información relacionada con su estado de salud y su historia clínica, en los términos del artículo 34 de la Ley 23 de 1981 y demás normas concordantes. En tal sentido, autoriza de manera previa, expresa e informada a COOPSERP COLOMBIA para tratar sus datos personales sensibles relacionados con su estado de salud, exclusivamente para fines asociados al cumplimiento de obligaciones legales y contractuales en el marco de la relación laboral, particularmente en materia de seguridad y salud en el trabajo, evaluación de aptitud laboral, gestión de incapacidades y demás actividades estrictamente necesarias. En todo caso, COOPSERP COLOMBIA se obliga a garantizar la confidencialidad, seguridad y uso restringido de dicha información, conforme a la Ley 1581 de 2012 y demás normas aplicables, circunscribiendo el acceso a la historia clínica completa únicamente a los eventos expresamente autorizados por la ley.`,
+PARÁGRAFO SEGUNDO. El trabajador manifiesta que ha sido informado sobre el carácter reservado de la información relacionada con su estado de salud y su historia clínica, en los términos del artículo 34 de la Ley 23 de 1981 y demás normas concordantes. En tal sentido, autoriza de manera previa, expresa e informada a COOPSERP COLOMBIA para tratar sus datos personales sensibles relacionados con su estado de salud, exclusivamente para fines asociados al cumplimiento de obligaciones legales y contractuales en el marco de la relación laboral, particularmente en materia de seguridad y salud en el trabajo, evaluación de aptitud laboral, gestión de incapacidades y demás actividades estrictamente necesarias. En todo caso, COOPSERP COLOMBIA se obliga a garantizar la confidencialidad, seguridad y uso restringido de dicha información, conforme a la Ley 1581 de 2012 y demás normas aplicables, circunscribiendo el acceso a la historia clínica completa únicamente a los eventos expresamente autorizados por la ley.`,
             orden: 19
         }
     ];
@@ -313,9 +428,11 @@ PARÁGRAFO SEGUNDO El trabajador manifiesta que ha sido informado sobre el cará
             },
             {
                 titulo: 'TERCERA. PERIODO DE PRUEBA',
-                contenido: `Los primeros dos (2) meses del presente contrato son considerados como periodo de prueba y por consiguiente cualquiera de las partes puede terminarlo unilateralmente sin previo aviso y sin lugar a indemnización alguna, en los términos señalados por la legislación laboral vigente sobre la materia.`,
+                contenido: (esAscenso || esCambioModalidad)
+                    ? `Las partes acuerdan que no habrá lugar a período de prueba, por cuanto el presente contrato no constituye una nueva vinculación laboral sino la continuidad de la relación de trabajo existente entre EL EMPLEADOR y EL TRABAJADOR, quien asume un nuevo cargo como consecuencia de un ascenso o cambio del cargo dentro de la Cooperativa, en consecuencia, se mantendrá para todos los efectos legales la antigüedad laboral previamente reconocida, sin solución de continuidad.`
+                    : `Las partes acuerdan establecer un período de prueba de dos (2) meses, el cual iniciará a partir de la firma del presente contrato, de conformidad con lo establecido en el artículo 78 del Código Sustantivo del Trabajo. Durante este lapso, cualquiera de las partes podrá dar por terminado el contrato unilateralmente en cualquier momento, sin previo aviso y sin que haya lugar al pago de indemnización alguna.`,
                 orden: 3
-            }
+            },
         ];
     }
 
@@ -530,7 +647,9 @@ d. Las demás que consideren y pacten las partes por voluntad expresa en virtud 
             },
             {
                 titulo: 'TERCERA. PERIODO DE PRUEBA',
-                contenido: `Las partes acuerdan como periodo de prueba el término de ${terminoInicial ? `la quinta parte del término inicialmente pactado (${Math.ceil(parseInt(terminoInicial) / 5)} días)` : 'XXXXXXXXXX'}, el cual no podrá exceder la quinta parte del término inicialmente pactado ni ser superior a dos (2) meses, conforme al artículo 76 del Código Sustantivo del Trabajo.`,
+                contenido: (esAscenso || esCambioModalidad)
+                    ? `Las partes acuerdan que no habrá lugar a período de prueba, por cuanto el presente contrato no constituye una nueva vinculación laboral sino la continuidad de la relación de trabajo existente entre EL EMPLEADOR y EL TRABAJADOR, quien asume un nuevo cargo como consecuencia de un ascenso o cambio del cargo dentro de la Cooperativa, en consecuencia, se mantendrá para todos los efectos legales la antigüedad laboral previamente reconocida, sin solución de continuidad.`
+                    : `Las partes acuerdan establecer un período de prueba de dos (2) meses, el cual iniciará a partir de la firma del presente contrato, de conformidad con lo establecido en el artículo 78 del Código Sustantivo del Trabajo. Durante este lapso, cualquiera de las partes podrá dar por terminado el contrato unilateralmente en cualquier momento, sin previo aviso y sin que haya lugar al pago de indemnización alguna.`,
                 orden: 3
             }
         ];
@@ -670,7 +789,8 @@ const ContratoModel = {
                 data.cargo,
                 datosAprendiz,
                 funcionarioData,
-                data.confianza_manejo || false
+                data.confianzaManejo || data.confianza_manejo || false,
+                data.esAscenso || false
             );
 
             for (const clausula of clausulas) {
@@ -721,7 +841,7 @@ const ContratoModel = {
             c.practica_fin,
             c.motivo_anulado,
             c.fecha_modificacion,
-            
+
             -- Datos del funcionario
             f.id_funcionario,
             f.nombres,
@@ -986,7 +1106,7 @@ const ContratoModel = {
         return rows[0];
     },
 
-    cambiarModalidadAIndefinido: async (idContrato, idPosicion, usuarioCreacion, nuevoNumeroContrato) => {
+    cambiarModalidadAIndefinido: async (idContrato, idPosicion, usuarioCreacion, nuevoNumeroContrato, confianzaManejo = false, esAscenso = false, esCambioModalidad = true) => {
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
@@ -1175,7 +1295,9 @@ const ContratoModel = {
                 posicion[0].nombre_cargo,
                 datosAprendiz,
                 funcionarioData,
-                data.confianza_manejo || false
+                confianzaManejo,
+                esAscenso,
+                esCambioModalidad
             );
 
             for (const clausula of clausulas) {
