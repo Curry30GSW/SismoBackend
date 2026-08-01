@@ -47,19 +47,20 @@ const PensionesModel = {
 
     update: async (id, data) => {
         const query = `
-            UPDATE pensiones SET
-                codigo_pension = ?,
-                nit_pension = ?,
-                nombre_pension = ?,
-                nombre_aporte = ?
-            WHERE id_pension = ?
-        `;
+        UPDATE pensiones SET
+            codigo_pension = ?,
+            nit_pension = ?,
+            nombre_pension = ?,
+            nombre_aporte = ?
+        WHERE id_pension = ?
+    `;
 
         const values = [
             data.codigo_pension,
             data.nit_pension,
             data.nombre_pension,
-            data.nombre_aporte
+            data.nombre_aporte,
+            id
         ];
 
         const [result] = await pool.query(query, values);

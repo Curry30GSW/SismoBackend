@@ -41,6 +41,7 @@ const encargaturaRoutes = require('./routes/Contratos/EncargaturaRoutes');
 const trasladoRoutes = require('./routes/Contratos/trasladoRoutes');
 const cambioFechasAprendizRoutes = require('./routes/Contratos/cambioFechasAprendizRoutes');
 const nombramientosRoutes = require('./routes/Contratos/nombramientoRoutes');
+const firmanteRoutes = require('./routes/Contratos/firmanteRoutes')
 // =============================================
 // IMPORTS DE RUTAS - PRINCIPALES
 // =============================================
@@ -111,6 +112,7 @@ app.use('/api/encargaturas', encargaturaRoutes);
 app.use('/api/traslados', trasladoRoutes);
 app.use('/api/contratos-sena', cambioFechasAprendizRoutes);
 app.use('/api/nombramientos', nombramientosRoutes);
+app.use('/api/firmantes', firmanteRoutes);
 
 // =============================================
 // RUTAS - PRINCIPALES

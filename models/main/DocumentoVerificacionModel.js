@@ -3,26 +3,30 @@ const { generarCodigo } = require('../../utils/verificacion');
 
 const DocumentoVerificacionModel = {
     crear: async (data) => {
-        const { tipo_documento, id_documento, id_funcionario } = data;
+        const { tipo_documento, id_documento, id_funcionario, nombre_firma, cargo_firma } = data;
 
         // Generar código único
         const codigo = generarCodigo(tipo_documento, id_documento);
 
         const query = `
-            INSERT INTO documentos_verificacion (
-                codigo,
-                tipo_documento,
-                id_documento,
-                id_funcionario,
-                activo
-            ) VALUES (?, ?, ?, ?, ?)
-        `;
+        INSERT INTO documentos_verificacion (
+            codigo,
+            tipo_documento,
+            id_documento,
+            id_funcionario,
+            nombre_firma,
+            cargo_firma,
+            activo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
 
         const values = [
             codigo,
             tipo_documento,
             id_documento,
             id_funcionario,
+            nombre_firma || null,
+            cargo_firma || null,
             true
         ];
 
@@ -33,7 +37,9 @@ const DocumentoVerificacionModel = {
             codigo,
             tipo_documento,
             id_documento,
-            id_funcionario
+            id_funcionario,
+            nombre_firma,
+            cargo_firma
         };
     },
 
@@ -248,7 +254,17 @@ const DocumentoVerificacionModel = {
         }
 
         return documento;
-    }
+    },
+
+    actualizarFirma: async (idVerificacion, nombreFirma, cargoFirma) => {
+        const [result] = await pool.query(`
+        UPDATE documentos_verificacion 
+        SET nombre_firma = ?, cargo_firma = ? 
+        WHERE id_verificacion = ?
+    `, [nombreFirma, cargoFirma, idVerificacion]);
+
+        return result;
+    },
 };
 
 module.exports = DocumentoVerificacionModel;

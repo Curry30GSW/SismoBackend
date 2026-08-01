@@ -12,6 +12,7 @@ const PREFIJOS = {
     NO_PRORROGA: 'NPROR',
     TRASLADO: 'ADTR',
     OTRO_SI_APRENDIZ: 'OTRO',
+    CAMBIO_MODALIDAD: 'NOMBR',
 };
 
 function generarCodigo(tipoDocumento, idDocumento) {

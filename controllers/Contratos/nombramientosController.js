@@ -75,7 +75,6 @@ const NombramientoController = {
         }
     },
 
-
     getById: async (req, res) => {
         try {
             const { id } = req.params;
@@ -158,7 +157,43 @@ const NombramientoController = {
                 message: error.message
             });
         }
-    }
+    },
+
+    getAll: async (req, res) => {
+        try {
+            const filtros = req.query;
+
+            // Validar y convertir parámetros
+            if (filtros.limite) filtros.limite = parseInt(filtros.limite);
+            if (filtros.pagina) filtros.pagina = parseInt(filtros.pagina);
+
+            // Obtener datos
+            const [nombramientos, total] = await Promise.all([
+                NombramientoModel.getAll(filtros),
+                NombramientoModel.getCount(filtros)
+            ]);
+
+            // Construir respuesta con paginación
+            const respuesta = {
+                success: true,
+                data: nombramientos,
+                paginacion: {
+                    total: total,
+                    pagina: filtros.pagina || 1,
+                    limite: filtros.limite || total,
+                    total_paginas: filtros.limite ? Math.ceil(total / filtros.limite) : 1
+                }
+            };
+
+            res.json(respuesta);
+        } catch (error) {
+            console.error('Error en getAll nombramientos:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
 };
 
 module.exports = NombramientoController;

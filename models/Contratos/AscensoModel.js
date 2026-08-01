@@ -33,7 +33,6 @@ const AscensoModel = {
         }
     },
 
-    // Crear registro de ascenso
     create: async (data) => {
         const query = `
             INSERT INTO ascensos (
@@ -67,7 +66,6 @@ const AscensoModel = {
         return { id_ascenso: result.insertId, ...data };
     },
 
-    // Obtener ascenso completo con todos los datos relacionados
     getById: async (idAscenso) => {
         const [rows] = await pool.query(`
             SELECT 
@@ -143,7 +141,6 @@ const AscensoModel = {
         return rows[0];
     },
 
-    // ✅ NUEVO: Obtener ascensos pendientes
     getPendientes: async () => {
         const [rows] = await pool.query(`
             SELECT 

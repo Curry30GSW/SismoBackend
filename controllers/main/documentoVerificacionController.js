@@ -4,7 +4,7 @@ const documentoVerificacionController = {
     // Generar y guardar código para un documento
     generarCodigo: async (req, res) => {
         try {
-            const { tipo_documento, id_documento, id_funcionario } = req.body;
+            const { tipo_documento, id_documento, id_funcionario, nombre_firma, cargo_firma } = req.body;
 
             if (!tipo_documento || !id_documento || !id_funcionario) {
                 return res.status(400).json({
@@ -13,24 +13,19 @@ const documentoVerificacionController = {
                 });
             }
 
-            if (tipo_documento === 'OTRO_SI_APRENDIZ') {
-                const nuevoCodigo = await DocumentoVerificacionModel.crear({
-                    tipo_documento,
-                    id_documento,
-                    id_funcionario
-                });
-
-                return res.json({
-                    success: true,
-                    data: nuevoCodigo,
-                    message: 'Código de verificación generado exitosamente'
-                });
-            }
-
-            // Para los demás tipos, verificar si ya existe
+            // Verificar si ya existe
             let existente = await DocumentoVerificacionModel.obtenerPorReferencia(tipo_documento, id_documento);
 
             if (existente) {
+                // Si existe, actualizar la firma si se proporciona una nueva
+                if (nombre_firma || cargo_firma) {
+                    await DocumentoVerificacionModel.actualizarFirma(
+                        existente.id_verificacion,
+                        nombre_firma || existente.nombre_firma,
+                        cargo_firma || existente.cargo_firma
+                    );
+                    existente = await DocumentoVerificacionModel.obtenerPorReferencia(tipo_documento, id_documento);
+                }
                 return res.json({
                     success: true,
                     data: existente,
@@ -38,11 +33,13 @@ const documentoVerificacionController = {
                 });
             }
 
-            // Crear nuevo código
+            // Crear nuevo código con la firma
             const nuevoCodigo = await DocumentoVerificacionModel.crear({
                 tipo_documento,
                 id_documento,
-                id_funcionario
+                id_funcionario,
+                nombre_firma: nombre_firma || null,
+                cargo_firma: cargo_firma || null
             });
 
             res.json({
@@ -64,17 +61,13 @@ const documentoVerificacionController = {
     verificar: async (req, res) => {
         try {
             const { codigo } = req.params;
-
             const infoVerificacion = await DocumentoVerificacionModel.verificar(codigo);
-
             if (!infoVerificacion) {
                 return res.status(404).json({
                     success: false,
                     message: '❌ Documento no válido o código inexistente'
                 });
             }
-
-            // Obtener datos completos del documento
             const documentoCompleto = await DocumentoVerificacionModel.obtenerDocumentoCompleto(
                 infoVerificacion.tipo_documento,
                 infoVerificacion.id_documento
@@ -86,18 +79,18 @@ const documentoVerificacionController = {
                     codigo: infoVerificacion.codigo,
                     tipo_documento: infoVerificacion.tipo_documento,
                     fecha_emision: infoVerificacion.fecha_emision,
-                    documento: documentoCompleto,
+                    documento: {
+                        ...documentoCompleto,
+                        nombre_firma: infoVerificacion.nombre_firma,
+                        cargo_firma: infoVerificacion.cargo_firma
+                    },
                     es_valido: true
                 },
                 message: '✅ Documento auténtico'
             });
-
         } catch (error) {
             console.error('Error en verificar:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
