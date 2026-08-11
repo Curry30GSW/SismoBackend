@@ -113,58 +113,60 @@ const NombramientoModel = {
 
     getAll: async (filtros = {}) => {
         let query = `
-        SELECT 
-            n.id_nombramiento,
-            n.codigo_nombramiento,
-            n.id_contrato_anterior,
-            n.id_contrato_nuevo,
-            n.id_posicion_nueva,
-            n.id_posicion_anterior,
-            n.id_funcionario,
-            n.fecha_nombramiento,
-            n.fecha_efectiva,
-            n.estado,
-            
-            -- Datos del contrato anterior
-            ca.numero_contrato as numero_contrato,
-            ca.cargo as cargo_anterior,
-            ca.salario as salario_anterior,
-            ca.fecha_inicio as fecha_inicio_anterior,
-            ca.estado as estado_contrato_anterior,
-            ca.lugar_labores as departamento_anterior,
-            
-            -- Datos del contrato nuevo
-            cn.numero_contrato as contrato_nuevo_numero,
-            cn.cargo as cargo_nuevo,
-            cn.salario as salario_nuevo,
-            cn.fecha_inicio as fecha_inicio_nuevo,
-            cn.estado as estado_contrato_nuevo,
-            
-            -- Datos del funcionario
-            f.nombres,
-            f.apellidos,
-            f.tipo_documento,
-            f.numero_documento,
-            f.correo_electronico,
-            
-            -- Datos de la posición nueva
-            cb.nombre_cargo as nombre_cargo_nuevo,
-            d.nombre_departamento as departamento_nuevo,
-            
-            -- Posición anterior (fija)
-            cbf.nombre_cargo as nombre_cargo_anterior
-            
-        FROM nombramientos n
-        INNER JOIN contratos ca ON n.id_contrato_anterior = ca.id_contrato
-        INNER JOIN contratos cn ON n.id_contrato_nuevo = cn.id_contrato
-        INNER JOIN funcionarios f ON n.id_funcionario = f.id_funcionario
-        LEFT JOIN posiciones_cargo pc ON n.id_posicion_nueva = pc.id_posicion
-        LEFT JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
-        LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
-        LEFT JOIN posiciones_cargo_fijo pf ON n.id_posicion_anterior = pf.id_posicion_fijo
-        LEFT JOIN cargos_base cbf ON pf.id_cargo_base = cbf.id_cargo_base
-        WHERE 1=1
-    `;
+            SELECT 
+                n.id_nombramiento,
+                n.codigo_nombramiento,
+                n.id_contrato_anterior,
+                n.id_contrato_nuevo,
+                n.id_posicion_nueva,
+                n.id_posicion_anterior,
+                n.id_funcionario,
+                n.fecha_nombramiento,
+                n.fecha_efectiva,
+                n.estado,
+                
+                -- Datos del contrato anterior
+                ca.numero_contrato as numero_contrato,
+                ca.numero_contrato_ant as numero_contrato_ant, 
+                ca.cargo as cargo_anterior,
+                ca.salario as salario_anterior,
+                ca.fecha_inicio as fecha_inicio_anterior,
+                ca.fecha_inicio_contrato_ant as fecha_inicio_contrato_ant, 
+                ca.estado as estado_contrato_anterior,
+                ca.lugar_labores as departamento_anterior,
+                
+                -- Datos del contrato nuevo
+                cn.numero_contrato as contrato_nuevo_numero,
+                cn.cargo as cargo_nuevo,
+                cn.salario as salario_nuevo,
+                cn.fecha_inicio as fecha_inicio_nuevo,
+                cn.estado as estado_contrato_nuevo,
+                
+                -- Datos del funcionario
+                f.nombres,
+                f.apellidos,
+                f.tipo_documento,
+                f.numero_documento,
+                f.correo_electronico,
+                
+                -- Datos de la posición nueva
+                cb.nombre_cargo as nombre_cargo_nuevo,
+                d.nombre_departamento as departamento_nuevo,
+                
+                -- Posición anterior (fija)
+                cbf.nombre_cargo as nombre_cargo_anterior
+                
+            FROM nombramientos n
+            INNER JOIN contratos ca ON n.id_contrato_anterior = ca.id_contrato
+            INNER JOIN contratos cn ON n.id_contrato_nuevo = cn.id_contrato
+            INNER JOIN funcionarios f ON n.id_funcionario = f.id_funcionario
+            LEFT JOIN posiciones_cargo pc ON n.id_posicion_nueva = pc.id_posicion
+            LEFT JOIN cargos_base cb ON pc.id_cargo_base = cb.id_cargo_base
+            LEFT JOIN departamentos d ON pc.id_departamento = d.id_departamento
+            LEFT JOIN posiciones_cargo_fijo pf ON n.id_posicion_anterior = pf.id_posicion_fijo
+            LEFT JOIN cargos_base cbf ON pf.id_cargo_base = cbf.id_cargo_base
+            WHERE 1=1
+        `;
 
         const params = [];
 

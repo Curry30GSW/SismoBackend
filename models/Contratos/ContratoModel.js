@@ -394,9 +394,11 @@ PARÁGRAFO PRIMERO. El presente contrato queda sujeto a las disposiciones legale
             titulo: 'DÉCIMA SEPTIMA. EFICACIA',
             contenido: confianzaManejo
                 ? `El presente contrato sustituye las condiciones del contrato anterior en cuanto a cargo, funciones, remuneración, como trabajador de dirección, confianza y manejo, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas en la legislación laboral para los contratos sin que les pueda ser aplicable ninguna otra norma diferente.`
-                : tipoContrato === 'INDEFINIDO' && (esAscenso || esCambioModalidad)
-                    ? `El presente contrato sustituye las condiciones del contrato anterior únicamente en cuanto a su modalidad, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas, Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`
-                    : `El presente contrato regula la relación laboral entre las partes durante su vigencia, sin perjuicio de los derechos causados con anterioridad en caso de existir una vinculación previa, este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`,
+                : esCambioModalidad
+                    ? `El presente contrato regula las condiciones de la relación laboral entre las partes, sustituyendo el acuerdo escrito anterior en cuanto a su modalidad contractual, la cual pasa a ser a término indefinido, así como en las condiciones de cargo, funciones y/o remuneración que se hayan pactado para esta nueva etapa, manteniéndose la continuidad de la relación laboral para todos los efectos legales. Las partes dejan expresa constancia de que este documento no constituye una nueva relación laboral autónoma, sino la prolongación ininterrumpida de la relación previa. De la misma manera, las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas. Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`
+                    : tipoContrato === 'INDEFINIDO' && esAscenso
+                        ? `El presente contrato sustituye las condiciones del contrato anterior únicamente en cuanto a su modalidad, manteniéndose la continuidad de la relación laboral para todos los efectos legales. De la misma manera las partes dejan expresa constancia de su acuerdo bilateral y consensual de regir la relación laboral en todas las circunstancias por las normas establecidas. Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`
+                        : `El presente contrato regula la relación laboral entre las partes durante su vigencia, sin perjuicio de los derechos causados con anterioridad en caso de existir una vinculación previa. Este contrato se rige por la Constitución Política, el Código Sustantivo del Trabajo, la Ley 2466 de 2025 y demás normas laborales vigentes.`,
             orden: 17
         },
         {
@@ -449,52 +451,95 @@ PARÁGRAFO PRIMERO. El presente contrato queda sujeto a las disposiciones legale
     }
 
     if (tipoContrato === 'APRENDIZ') {
-        // Formatear fechas
-        const fechaInicioObj = new Date(fechaInicio);
-        const fechaFinObj = new Date(fechaFin);
+        const crearFechaLocal = (fechaStr) => {
+            if (!fechaStr) return null;
+            try {
+                const [year, month, day] = fechaStr.split('-').map(Number);
+                if (!year || !month || !day) return null;
+                const fecha = new Date(year, month - 1, day);
+                if (isNaN(fecha.getTime())) return null;
+                return fecha;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const formatearFechaClausula = (fechaStr) => {
+            if (!fechaStr || fechaStr === 'null' || fechaStr === 'undefined') {
+                return 'N/A';
+            }
+            const fecha = crearFechaLocal(fechaStr);
+            if (!fecha) return 'N/A';
+            const dia = fecha.getDate();
+            const mes = fecha.toLocaleString('es', { month: 'short' }).toUpperCase();
+            const anio = fecha.getFullYear();
+            return `${dia} de ${mes} de ${anio}`;
+        };
+
+        // Obtener fechas de las etapas (sin fallback a fechaInicio)
+        const fechaInicioElectiva = datosAprendiz?.electiva_inicio ?? null;
+        const fechaFinElectiva = datosAprendiz?.electiva_fin ?? null;
+        const fechaInicioPractica = datosAprendiz?.practica_inicio ?? null;
+        const fechaFinPractica = datosAprendiz?.practica_fin ?? null;
+
+        // Formatear fechas de las etapas
+        const fechaInicioElectivaFormateada = formatearFechaClausula(fechaInicioElectiva);
+        const fechaFinElectivaFormateada = formatearFechaClausula(fechaFinElectiva);
+        const fechaInicioPracticaFormateada = formatearFechaClausula(fechaInicioPractica);
+        const fechaFinPracticaFormateada = formatearFechaClausula(fechaFinPractica);
+
+        // ✅ Usar la misma función para las fechas de vigencia
+        const fechaInicioFormateada = formatearFechaClausula(fechaInicio);
+        const fechaFinFormateada = formatearFechaClausula(fechaFin);
+
+        // Obtener datos del aprendiz
+        const especialidad = datosAprendiz?.especialidad || cargo || 'la formación establecida';
+        const grupo = datosAprendiz?.numero_grupo || 'N/A';
+        const modalidadFormacion = datosAprendiz?.modalidad_formacion || 'tradicional';
+        const centroFormacion = datosAprendiz?.centro_formacion || 'CENTRO DE FORMACIÓN PROFESIONAL';
+        const institutoFormacion = datosAprendiz?.instituto_formacion === 'OTRO'
+            ? (datosAprendiz?.otro_instituto || 'SENA')
+            : (datosAprendiz?.instituto_formacion || 'SENA');
+        const arl = datosAprendiz?.arl || 'ARL CONTRATADA POR LA EMPRESA';
+        const esUniversitario = datosAprendiz?.esUniversitario || false;
+
+        // Calcular salario
+        const salarioNumerico = datosAprendiz?.salario || 0;
+        const smlv = datosAprendiz?.salarioMinimoAnual || 0;
+        const porcentaje = smlv > 0 ? (salarioNumerico / smlv) * 100 : 75;
+        const porcentajeTexto = porcentaje === 75 ? '75%' : porcentaje === 100 ? '100%' : `${porcentaje.toFixed(0)}%`;
+
+        // Calcular meses de duración
+        const fechaInicioObj = crearFechaLocal(fechaInicio);
+        const fechaFinObj = crearFechaLocal(fechaFin);
+
+        if (!fechaInicioObj || !fechaFinObj) {
+            console.error('Fechas inválidas:', { fechaInicio, fechaFin });
+            return [{
+                titulo: 'ERROR',
+                contenido: 'Error: Fechas de contrato inválidas',
+                orden: 0
+            }];
+        }
+
+        const diffTime = Math.abs(fechaFinObj - fechaInicioObj);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const meses = Math.round(diffDays / 30);
+
+
+        // Formatear fechas de inicio y fin del contrato
         const diaInicio = fechaInicioObj.getDate();
         const mesInicio = fechaInicioObj.toLocaleString('es', { month: 'short' }).toUpperCase();
         const añoInicio = fechaInicioObj.getFullYear();
         const diaFin = fechaFinObj.getDate();
         const mesFin = fechaFinObj.toLocaleString('es', { month: 'short' }).toUpperCase();
         const añoFin = fechaFinObj.getFullYear();
-        // Calcular meses de duración
-        const diffTime = Math.abs(fechaFinObj - fechaInicioObj);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const meses = Math.round(diffDays / 30);
-        // Obtener datos del aprendiz
-        const especialidad = datosAprendiz.especialidad || cargo || 'la formación establecida';
-        const grupo = datosAprendiz.numero_grupo || '';
-        const centroFormacion = datosAprendiz.centro_formacion || 'CENTRO DE FORMACIÓN PROFESIONAL';
-        const institutoFormacion = datosAprendiz.instituto_formacion === 'OTRO'
-            ? datosAprendiz.otro_instituto
-            : datosAprendiz.instituto_formacion || 'SENA';
-        const arl = datosAprendiz.arl || 'ARL CONTRATADA POR LA EMPRESA';
-        // Determinar porcentaje de salario según etapa
-        const salarioNumerico = datosAprendiz.salario || 0;
-        const smlv = datosAprendiz.salarioMinimoAnual || 0;
-        const porcentaje = smlv > 0 ? (salarioNumerico / smlv) * 100 : 75;
-        const porcentajeTexto = porcentaje === 75 ? '75%' : porcentaje === 100 ? '100%' : `${porcentaje.toFixed(0)}%`;
-        // Determinar si es universitario
-        const esUniversitario = datosAprendiz.esUniversitario || false;
-        // Fechas de etapas (si no se envían, usar las del contrato)
-        const fechaInicioelectiva = datosAprendiz.electiva_inicio || fechaInicio;
-        const fechaFinelectiva = datosAprendiz.electiva_fin || fechaInicio;
-        const fechaInicioPractica = datosAprendiz.practica_inicio || fechaInicio;
-        const fechaFinPractica = datosAprendiz.practica_fin || fechaFin;
-        const formatearFechaClausula = (fechaStr) => {
-            if (!fechaStr) return '';
-            const [year, month, day] = fechaStr.split('-').map(Number);
-            const fecha = new Date(year, month - 1, day); // month - 1 porque los meses son 0-indexados
-            const dia = fecha.getDate();
-            const mes = fecha.toLocaleString('es', { month: 'short' }).toUpperCase();
-            const anio = fecha.getFullYear();
-            return `${dia} de ${mes} de ${anio}`;
-        };
+
+
         return [
             {
                 titulo: 'PRIMERA.- OBJETO',
-                contenido: `El presente contrato tiene como objeto garantizar al APRENDIZ la formación profesional metódica y completa en la especialidad de ${especialidad} Grupo ${grupo}, la cual se impartirá en su etapa lectiva en los ambientes de formación del ${centroFormacion} (Centro de Formación Profesional del ${institutoFormacion}), y en su etapa práctica se desarrollará en los ambientes reales de trabajo de la EMPRESA PATROCINADORA.`,
+                contenido: `El presente contrato tiene como objeto garantizar al APRENDIZ la formación profesional metódica y completa en la especialidad de ${especialidad} ${grupo !== 'N/A' ? `Grupo ${grupo}` : ''}, la cual se impartirá en su etapa lectiva en los ambientes de formación del ${centroFormacion} (Centro de Formación Profesional del ${institutoFormacion}), y en su etapa práctica se desarrollará en los ambientes reales de trabajo de la EMPRESA PATROCINADORA.`,
                 orden: 1
             },
             {
@@ -504,9 +549,26 @@ PARÁGRAFO PRIMERO. El presente contrato queda sujeto a las disposiciones legale
             },
             {
                 titulo: 'TERCERA – MODALIDAD DE FORMACIÓN',
-                contenido: `La formación será de tipo ${datosAprendiz.modalidad_formacion || 'tradicional'}, compuesta por las siguientes fases:
-Fase Electiva: del ${formatearFechaClausula(fechaInicioelectiva)} al ${formatearFechaClausula(fechaFinelectiva)}.
-Fase Práctica: del ${formatearFechaClausula(fechaInicioPractica)} al ${formatearFechaClausula(fechaFinPractica)}.`,
+                contenido: (() => {
+                    let faseElectiva = '';
+                    let fasePractica = '';
+
+                    if (fechaInicioElectiva && fechaFinElectiva) {
+                        faseElectiva = `Fase Electiva: ${fechaInicioElectivaFormateada} al ${fechaFinElectivaFormateada}.`;
+                    } else {
+                        faseElectiva = `Fase Electiva: N/A`;
+                    }
+
+                    if (fechaInicioPractica && fechaFinPractica) {
+                        fasePractica = `Fase Práctica: ${fechaInicioPracticaFormateada} al ${fechaFinPracticaFormateada}.`;
+                    } else {
+                        fasePractica = `Fase Práctica: N/A`;
+                    }
+
+                    return `La formación será de tipo ${modalidadFormacion}, compuesta por las siguientes fases:
+                        ${faseElectiva}
+                        ${fasePractica}`;
+                })(),
                 orden: 3
             },
             {
@@ -608,6 +670,7 @@ d. Las demás que consideren y pacten las partes por voluntad expresa en virtud 
             }
         ];
     }
+
     else if (tipoContrato === 'TERMINO_FIJO') {
         const fechaInicioFormateada = formatearFechaLarga(fechaInicio);
         const fechaFinFormateada = formatearFechaLarga(fechaFin);
@@ -761,10 +824,10 @@ const ContratoModel = {
                 arl: data.arl,
                 salario: data.salario,
                 salarioMinimoAnual: data.salario_minimo_anual || 0,
-                electiva_inicio: data.electiva_inicio || data.fecha_inicio,
-                electiva_fin: data.electiva_fin || data.fecha_inicio,
-                practica_inicio: data.practica_inicio || data.fecha_inicio,
-                practica_fin: data.practica_fin || data.fecha_fin
+                electiva_inicio: data.electiva_inicio ?? null,
+                electiva_fin: data.electiva_fin ?? null,
+                practica_inicio: data.practica_inicio ?? null,
+                practica_fin: data.practica_fin ?? null
             };
 
             // ============ DATOS DEL FUNCIONARIO ============
