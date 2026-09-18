@@ -40,10 +40,10 @@ const authMiddleware = (req, res, next) => {
 
 // Middleware para verificar rol de administrador
 const adminMiddleware = (req, res, next) => {
-    if (!req.user || req.user.rol !== 'ADMIN') {
+    if (!req.user || req.user.rol !== 'admin') {
         return res.status(403).json({
             success: false,
-            message: 'Acceso denegado. Se requieren permisos de administrador.'
+            message: 'Acceso denegado. Se requieren permisos de administrador.',
         });
     }
     next();
