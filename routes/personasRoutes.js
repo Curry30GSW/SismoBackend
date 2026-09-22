@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require('../middlewares/upload');
 const personaController = require('../controllers/personaController');
 
+router.post('/publico/registrar', upload.single('foto'), personaController.registrarPublico);
 router.post('/', upload.single('foto'), personaController.crear);
 router.get('/', personaController.listar);
 

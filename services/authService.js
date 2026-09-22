@@ -4,7 +4,7 @@ const UsuarioModel = require('../models/usuarioModel');
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'secret_access_key';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'secret_refresh_key';
-const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || '15m';
+const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || '2h';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || '7d';
 
 const AuthService = {
@@ -69,7 +69,7 @@ const AuthService = {
             httpOnly: true,
             secure: isProd,
             sameSite: isProd ? 'strict' : 'lax',
-            maxAge: 15 * 60 * 1000, // 15 min
+            maxAge: 2 * 60 * 60 * 1000,
         });
 
         res.cookie('refresh_token', refreshToken, {

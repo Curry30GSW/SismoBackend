@@ -6,6 +6,7 @@ node_modules/
 .pnp.js
 jspm_packages/
 bower_components/
+uploads/
 
 # ─────────────────────────────────────────────
 # Variables de entorno (¡NUNCA subir!)

@@ -2,16 +2,16 @@ const pool = require('../config/ConectDb');
 const { v4: uuidv4 } = require('uuid');
 
 const PersonaModel = {
-    // Devuelve una persona con su contacto principal ya "aplanado"
+    // Devuelve una persona con TODOS sus contactos
     async obtenerCompleta(id) {
         const [personas] = await pool.query('SELECT * FROM personas WHERE id = ?', [id]);
         if (personas.length === 0) return null;
 
         const [contactos] = await pool.query(
-            `SELECT nombre_contacto, telefono_contacto, direccion
-       FROM contactos_emergencia
-       WHERE persona_id = ?
-       ORDER BY es_principal DESC LIMIT 1`,
+            `SELECT nombre, telefono, parentesco
+             FROM contactos_emergencia
+             WHERE persona_id = ?
+             ORDER BY id ASC`,
             [id]
         );
 
@@ -24,15 +24,18 @@ const PersonaModel = {
             tipoSangre: p.tipo_sangre,
             fechaNacimiento: p.fecha_nacimiento,
             gestante: !!p.gestante,
+            semanasGestacion: p.semanas_gestacion ?? null,   // si agregas la columna
+            tieneDiscapacidad: p.discapacidad && p.discapacidad !== 'NINGUNA',
             discapacidad: p.discapacidad,
             medicamento: p.medicamento,
+            direccion: p.direccion ?? null,                   // si agregas la columna
             foto: p.foto,
             creadoEn: p.creado_en,
-            contacto: contactos[0] || {
-                nombreContacto: null,
-                telefonoContacto: null,
-                direccion: null,
-            },
+            contactos: contactos.map((c) => ({
+                nombre: c.nombre,
+                telefono: c.telefono,
+                parentesco: c.parentesco ?? '',
+            })),
         };
     },
 
@@ -45,41 +48,72 @@ const PersonaModel = {
         const id = uuidv4();
         const {
             cedula, nombre, apellidos, tipoSangre, fechaNacimiento,
-            gestante, discapacidad, medicamento, foto,
+            gestante, semanasGestacion, discapacidad, medicamento,
+            direccion, foto,
         } = datos;
+
+        const esGestante = gestante === 'true' || gestante === true;
 
         await conn.query(
             `INSERT INTO personas
-        (id, cedula, nombre, apellidos, tipo_sangre, fecha_nacimiento,
-         gestante, discapacidad, medicamento, foto)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+         (id, cedula, nombre, apellidos, tipo_sangre, fecha_nacimiento,
+          gestante, semanas_gestacion, discapacidad, medicamento, direccion, foto)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
             [
                 id, cedula, nombre, apellidos,
                 tipoSangre || null,
                 fechaNacimiento || null,
-                gestante === 'true' || gestante === true,
-                discapacidad || 'Ninguna',
-                medicamento || null,
+                esGestante,
+                esGestante && semanasGestacion ? Number(semanasGestacion) : null,
+                discapacidad || 'NINGUNA',
+                medicamento || 'NINGUNO',
+                direccion || null,
                 foto || null,
             ]
         );
         return id;
     },
 
-    async crearContacto(personaId, { nombreContacto, telefonoContacto, direccion }, conn = pool) {
+    // 👇 Ahora inserta N contactos en una sola query
+    async crearContactos(personaId, contactos, conn = pool) {
+        if (!Array.isArray(contactos) || contactos.length === 0) return;
+
+        const valores = contactos.map((c, i) => [
+            personaId,
+            c.nombre || null,
+            c.telefono || null,
+            c.parentesco || null,
+        ]);
+
         await conn.query(
             `INSERT INTO contactos_emergencia
-        (persona_id, nombre_contacto, telefono_contacto, direccion)
-       VALUES (?,?,?,?)`,
-            [personaId, nombreContacto || null, telefonoContacto || null, direccion || null]
+             (persona_id, nombre, telefono, parentesco)
+             VALUES ?`,
+            [valores]
         );
     },
 
     async listar() {
         const [rows] = await pool.query(
-            'SELECT id, cedula, nombre, apellidos, foto, creado_en FROM personas ORDER BY creado_en DESC'
+            `SELECT id, cedula, nombre, apellidos, foto, tipo_sangre, gestante,
+                semanas_gestacion, discapacidad, medicamento, creado_en
+         FROM personas
+         ORDER BY creado_en DESC`
         );
-        return rows;
+
+        return rows.map((p) => ({
+            id: p.id,
+            cedula: p.cedula,
+            nombre: p.nombre,
+            apellidos: p.apellidos,
+            foto: p.foto,
+            tipoSangre: p.tipo_sangre,
+            gestante: !!p.gestante,
+            semanasGestacion: p.semanas_gestacion ?? null,
+            discapacidad: p.discapacidad,
+            medicamento: p.medicamento,
+            creadoEn: p.creado_en,
+        }));
     },
 
     async obtenerIdPorCedula(cedula) {
@@ -91,10 +125,12 @@ const PersonaModel = {
         const mapaColumnas = {
             tipoSangre: 'tipo_sangre',
             fechaNacimiento: 'fecha_nacimiento',
+            semanasGestacion: 'semanas_gestacion',
         };
         const columnasPermitidas = [
             'cedula', 'nombre', 'apellidos', 'tipoSangre', 'fechaNacimiento',
-            'gestante', 'discapacidad', 'medicamento', 'foto',
+            'gestante', 'semanasGestacion', 'discapacidad', 'medicamento',
+            'direccion', 'foto',
         ];
 
         const sets = [];
@@ -115,6 +151,7 @@ const PersonaModel = {
     },
 
     async eliminar(id) {
+        // Los contactos se eliminan solos por ON DELETE CASCADE
         const [resultado] = await pool.query('DELETE FROM personas WHERE id = ?', [id]);
         return resultado.affectedRows;
     },
